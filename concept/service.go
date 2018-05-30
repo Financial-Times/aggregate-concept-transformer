@@ -322,6 +322,12 @@ func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept) ConcordedConcep
 	if s.IsAuthor {
 		c.IsAuthor = s.IsAuthor
 	}
+	if s.BirthYear > 0 {
+		c.BirthYear = s.BirthYear
+	}
+	if s.Salutation != "" {
+		c.Salutation = s.Salutation
+	}
 
 	for _, mr := range s.MembershipRoles {
 		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
