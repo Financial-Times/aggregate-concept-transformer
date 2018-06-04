@@ -425,7 +425,7 @@ func sendToWriter(client httpClient, baseUrl string, urlParam string, conceptUUI
 	request.Header.Set("X-Request-Id", tid)
 	resp, err := client.Do(request)
 	if err != nil {
-		return updatedConcepts, err
+		logger.WithError(err).WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -441,9 +441,10 @@ func sendToWriter(client httpClient, baseUrl string, urlParam string, conceptUUI
 	if resp.StatusCode == 404 && strings.Contains(baseUrl, "elastic") {
 		logger.WithTransactionID(tid).WithUUID(conceptUUID).Debugf("Elastic search rw cannot handle concept: %s, because it has an unsupported type %s; skipping record", conceptUUID, concept.Type)
 		return updatedConcepts, nil
-	} else if reqErr != nil || resp.StatusCode != 200 {
+	}
+	if resp.StatusCode != 200 {
 		err := errors.New("Request to " + reqUrl + " returned status: " + strconv.Itoa(resp.StatusCode) + "; skipping " + conceptUUID)
-		logger.WithError(reqErr).WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
+		logger.WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
 		return updatedConcepts, err
 	}
 
