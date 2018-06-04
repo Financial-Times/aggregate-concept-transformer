@@ -71,6 +71,8 @@ func TestAggregateService_GetConcordedConcept_NoConcordance(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "tid_123", tid)
 	assert.Equal(t, "Test Concept", c.PrefLabel)
+	assert.Equal(t, "Mr", c.Salutation)
+	assert.Equal(t, 2018, c.BirthYear)
 }
 
 func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
@@ -98,14 +100,14 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 		},
 		OrganisationUUID: "a4528fc9-0615-4bfa-bc99-596ea1ddec28",
 		PersonUUID:       "973509c1-5238-4c83-9a7d-89009e839ff8",
-		IsDeprecated: true,
+		IsDeprecated:     true,
 		SourceRepresentations: []s3.Concept{
 			{
-				UUID:      "34a571fb-d779-4610-a7ba-2e127676db4d",
-				PrefLabel: "TME Concept",
-				Authority: "TME",
-				AuthValue: "TME-123",
-				Type:      "Person",
+				UUID:         "34a571fb-d779-4610-a7ba-2e127676db4d",
+				PrefLabel:    "TME Concept",
+				Authority:    "TME",
+				AuthValue:    "TME-123",
+				Type:         "Person",
 				IsDeprecated: true,
 			},
 			{
@@ -517,11 +519,13 @@ func setupTestService(httpError int, writerResponse string) (Service, *mockS3Cli
 			"99247059-04ec-3abb-8693-a0b8951fdcab": {
 				transactionID: "tid_123",
 				concept: s3.Concept{
-					UUID:      "99247059-04eFc-3abb-8693-a0b8951fdcab",
-					PrefLabel: "Test Concept",
-					Authority: "Smartlogic",
-					AuthValue: "99247059-04ec-3abb-8693-a0b8951fdcab",
-					Type:      "Person",
+					UUID:       "99247059-04eFc-3abb-8693-a0b8951fdcab",
+					PrefLabel:  "Test Concept",
+					Authority:  "Smartlogic",
+					AuthValue:  "99247059-04ec-3abb-8693-a0b8951fdcab",
+					Type:       "Person",
+					Salutation: "Mr",
+					BirthYear:  2018,
 				},
 			},
 			"28090964-9997-4bc2-9638-7a11135aaff9": {
@@ -555,11 +559,11 @@ func setupTestService(httpError int, writerResponse string) (Service, *mockS3Cli
 			"34a571fb-d779-4610-a7ba-2e127676db4d": {
 				transactionID: "tid_789",
 				concept: s3.Concept{
-					UUID:      "34a571fb-d779-4610-a7ba-2e127676db4d",
-					PrefLabel: "TME Concept",
-					Authority: "TME",
-					AuthValue: "TME-123",
-					Type:      "Person",
+					UUID:         "34a571fb-d779-4610-a7ba-2e127676db4d",
+					PrefLabel:    "TME Concept",
+					Authority:    "TME",
+					AuthValue:    "TME-123",
+					Type:         "Person",
 					IsDeprecated: true,
 				},
 			},
