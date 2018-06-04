@@ -423,7 +423,10 @@ func sendToWriter(client httpClient, baseUrl string, urlParam string, conceptUUI
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
-	resp, reqErr := client.Do(request)
+	resp, err := client.Do(request)
+	if err != nil {
+		return updatedConcepts, err
+	}
 
 	defer resp.Body.Close()
 
