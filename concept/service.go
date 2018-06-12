@@ -252,10 +252,17 @@ func deduplicateAliases(aliases []string) []string {
 	return outAliases
 }
 
+func getMoreSpecificType(existingType string, newType string) string {
+	if existingType == "PublicCompany" && (newType == "Organisation" || newType == "Company") {
+		return existingType
+	}
+	return newType
+}
+
 func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept) ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
-	c.Type = s.Type
+	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
 	if s.Strapline != "" {
