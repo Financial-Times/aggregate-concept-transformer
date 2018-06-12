@@ -243,6 +243,81 @@ func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 	assert.Equal(t, expectedConcept, c)
 }
 
+func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
+	svc, _, _, _, _ := setupTestService(200, payload)
+	expectedConcept := ConcordedConcept{
+		PrefUUID:    "a141f50f-31d7-4f89-8143-eec971e54ba8",
+		Type:        "PublicCompany",
+		ProperName:  "Strix Group Plc",
+		PrefLabel:   "Test FT Concorded Organisation",
+		ShortName:   "Strix Group",
+		HiddenLabel: "STRIX GROUP PLC",
+		FormerNames: []string{
+			"Castletown Thermostats",
+			"Steam Plc",
+		},
+		Aliases: []string{
+			"Strix Group Plc",
+			"STRIX GROUP PLC",
+			"Strix Group",
+			"Castletown Thermostats",
+			"Steam Plc",
+			"Test FT Concorded Organisation",
+		},
+		CountryCode:            "GB",
+		CountryOfIncorporation: "IM",
+		PostalCode:             "IM9 2RG",
+		YearFounded:            1951,
+		EmailAddress:           "info@strix.com",
+		LeiCode:                "213800KZEW5W6BZMNT62",
+		SourceRepresentations: []s3.Concept{
+			{
+				UUID:        "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
+				Type:        "PublicCompany",
+				Authority:   "FACTSET",
+				AuthValue:   "B000BB-S",
+				ProperName:  "Strix Group Plc",
+				PrefLabel:   "Strix Group Plc",
+				ShortName:   "Strix Group",
+				HiddenLabel: "STRIX GROUP PLC",
+				FormerNames: []string{
+					"Castletown Thermostats",
+					"Steam Plc",
+				},
+				Aliases: []string{
+					"Strix Group Plc",
+					"STRIX GROUP PLC",
+					"Strix Group",
+					"Castletown Thermostats",
+					"Steam Plc",
+				},
+				CountryCode:            "GB",
+				CountryOfIncorporation: "IM",
+				PostalCode:             "IM9 2RG",
+				YearFounded:            1951,
+				EmailAddress:           "info@strix.com",
+				LeiCode:                "213800KZEW5W6BZMNT62",
+				ParentOrganisation:     "123",
+			},
+			{
+				UUID:      "a141f50f-31d7-4f89-8143-eec971e54ba8",
+				PrefLabel: "Test FT Concorded Organisation",
+				Authority: "Smartlogic",
+				AuthValue: "a141f50f-31d7-4f89-8143-eec971e54ba8",
+				Type:      "Organisation",
+			},
+		},
+	}
+	c, tid, err := svc.GetConcordedConcept("a141f50f-31d7-4f89-8143-eec971e54ba8")
+	sort.Strings(c.FormerNames)
+	sort.Strings(c.Aliases)
+	sort.Strings(expectedConcept.FormerNames)
+	sort.Strings(expectedConcept.Aliases)
+	assert.NoError(t, err)
+	assert.Equal(t, "tid_636", tid)
+	assert.Equal(t, expectedConcept, c)
+}
+
 func TestAggregateService_GetConcordedConcept_BoardRole(t *testing.T) {
 	svc, _, _, _, _ := setupTestService(200, payload)
 	expectedConcept := ConcordedConcept{
@@ -656,6 +731,16 @@ func setupTestService(httpError int, writerResponse string) (Service, *mockS3Cli
 					Type:      "PublicCompany",
 				},
 			},
+			"a141f50f-31d7-4f89-8143-eec971e54ba8": {
+				transactionID: "tid_636",
+				concept: s3.Concept{
+					UUID:      "a141f50f-31d7-4f89-8143-eec971e54ba8",
+					PrefLabel: "Test FT Concorded Organisation",
+					Authority: "Smartlogic",
+					AuthValue: "a141f50f-31d7-4f89-8143-eec971e54ba8",
+					Type:      "Organisation",
+				},
+			},
 		},
 	}
 	sqs := &mockSQSClient{
@@ -693,6 +778,16 @@ func setupTestService(httpError int, writerResponse string) (Service, *mockS3Cli
 				concordances.ConcordanceRecord{
 					UUID:      "3a3da730-0f4c-4a20-85a6-3ebd5776bd49",
 					Authority: "FT-TME",
+				},
+			},
+			"a141f50f-31d7-4f89-8143-eec971e54ba8": []concordances.ConcordanceRecord{
+				concordances.ConcordanceRecord{
+					UUID:      "a141f50f-31d7-4f89-8143-eec971e54ba8",
+					Authority: "SmartLogic",
+				},
+				concordances.ConcordanceRecord{
+					UUID:      "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
+					Authority: "FACTSET",
 				},
 			},
 		},
