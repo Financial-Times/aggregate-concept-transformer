@@ -463,14 +463,6 @@ func TestAggregateService_ProcessMessage_Success_PurgeOnPublicCompany(t *testing
 	assert.NoError(t, err)
 }
 
-func TestAggregateService_ProcessMessage_GenericDynamoError(t *testing.T) {
-	svc, _, _, mockDynamoClient, _ := setupTestService(200, payload)
-	mockDynamoClient.err = errors.New("Could not get concordance record from DynamoDB")
-	err := svc.ProcessMessage("28090964-9997-4bc2-9638-7a11135aaff9")
-	assert.Error(t, err)
-	assert.Equal(t, "Could not get concordance record from DynamoDB", err.Error())
-}
-
 func TestAggregateService_ProcessMessage_GenericS3Error(t *testing.T) {
 	svc, mockS3Client, _, _, _ := setupTestService(200, payload)
 	mockS3Client.err = errors.New("Error retrieving concept from S3")
