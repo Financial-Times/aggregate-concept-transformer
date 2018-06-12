@@ -329,6 +329,12 @@ func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept) ConcordedConcep
 	if s.IsAuthor {
 		c.IsAuthor = s.IsAuthor
 	}
+	if s.BirthYear > 0 {
+		c.BirthYear = s.BirthYear
+	}
+	if s.Salutation != "" {
+		c.Salutation = s.Salutation
+	}
 
 	for _, mr := range s.MembershipRoles {
 		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
@@ -424,7 +430,10 @@ func sendToWriter(client httpClient, baseUrl string, urlParam string, conceptUUI
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
-	resp, reqErr := client.Do(request)
+	resp, err := client.Do(request)
+	if err != nil {
+		logger.WithError(err).WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
+	}
 
 	defer resp.Body.Close()
 
@@ -439,9 +448,10 @@ func sendToWriter(client httpClient, baseUrl string, urlParam string, conceptUUI
 	if resp.StatusCode == 404 && strings.Contains(baseUrl, "elastic") {
 		logger.WithTransactionID(tid).WithUUID(conceptUUID).Debugf("Elastic search rw cannot handle concept: %s, because it has an unsupported type %s; skipping record", conceptUUID, concept.Type)
 		return updatedConcepts, nil
-	} else if reqErr != nil || resp.StatusCode != 200 {
+	}
+	if resp.StatusCode != 200 {
 		err := errors.New("Request to " + reqUrl + " returned status: " + strconv.Itoa(resp.StatusCode) + "; skipping " + conceptUUID)
-		logger.WithError(reqErr).WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
+		logger.WithTransactionID(tid).WithUUID(conceptUUID).Errorf("Request to %s returned status: %d", reqUrl, resp.StatusCode)
 		return updatedConcepts, err
 	}
 
