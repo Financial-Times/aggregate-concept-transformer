@@ -403,7 +403,14 @@ func deduplicateAndSkipEmptyAliases(aliases []string) []string {
 }
 
 func getMoreSpecificType(existingType string, newType string) string {
-	if existingType == "PublicCompany" && (newType == "Organisation" || newType == "Company" || newType == "Thing") {
+
+	// Thing type shouldn't wipe things.
+	if newType == "Thing" && existingType != "" {
+		return existingType
+	}
+
+	// If we've already called it a PublicCompany, keep that information.
+	if existingType == "PublicCompany" && (newType == "Organisation" || newType == "Company") {
 		return existingType
 	}
 	return newType
