@@ -1,3 +1,7 @@
+<!--
+    Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
+    Any future edits should abide by this format.
+-->
 # UPP - Aggregate Concept Transformer
 
 A service that aggregates the information from all concept data providers and forwards it to the writer services for persistence in the concept stores.
@@ -8,7 +12,7 @@ aggregate-concept-transformer
 
 ## Primary URL
 
-<https://upp-prod-delivery-glb.upp.ft.com/__aggregate-concept-transformer/>
+https://upp-prod-delivery-glb.upp.ft.com/__aggregate-concept-transformer/
 
 ## Service Tier
 
@@ -17,23 +21,6 @@ Bronze
 ## Lifecycle Stage
 
 Production
-
-## Delivered By
-
-content
-
-## Supported By
-
-content
-
-## Known About By
-
-- dimitar.terziev
-- elitsa.pavlova
-- ivan.nikolov
-- kalin.arsov
-- miroslav.gatsanoga
-- marina.chompalova
 
 ## Host Platform
 
@@ -51,13 +38,19 @@ No
 
 No
 
-## Dependencies
+<!-- Placeholder - remove HTML comment markers to activate
+## Can Download Personal Data
+Choose Yes or No
 
-- concepts-rw-neo4j
-- concordances-rw-neo4j
-- up-crwes
-- upp-concept-events-queue
-- varnish-purger
+...or delete this placeholder if not applicable to this system
+-->
+
+<!-- Placeholder - remove HTML comment markers to activate
+## Can Contact Individuals
+Choose Yes or No
+
+...or delete this placeholder if not applicable to this system
+-->
 
 ## Failover Architecture Type
 
@@ -96,6 +89,14 @@ Manual
 
 If the new release does not change the way messages are consumed, transformed or sent it is safe to deploy it without cluster failover.
 
+<!-- Placeholder - remove HTML comment markers to activate
+## Heroku Pipeline Name
+Enter descriptive text satisfying the following:
+This is the name of the Heroku pipeline for this system. If you don't have a pipeline, this is the name of the app in Heroku. A pipeline is a group of Heroku apps that share the same codebase where each app in a pipeline represents the different stages in a continuous delivery workflow, i.e. staging, production.
+
+...or delete this placeholder if not applicable to this system
+-->
+
 ## Key Management Process Type
 
 Manual
@@ -109,8 +110,8 @@ To rotate credentials you need to login to a particular cluster and update varni
 
 Service in UPP K8S delivery clusters:
 
-- Delivery-Prod-EU health: <https://upp-prod-delivery-eu.upp.ft.com/__health/__pods-health?service-name=aggregate-concept-transformer>
-- Delivery-Prod-US health: <https://upp-prod-delivery-us.upp.ft.com/__health/__pods-health?service-name=aggregate-concept-transformer>
+*   Delivery-Prod-EU health: <https://upp-prod-delivery-eu.upp.ft.com/__health/__pods-health?service-name=aggregate-concept-transformer>
+*   Delivery-Prod-US health: <https://upp-prod-delivery-us.upp.ft.com/__health/__pods-health?service-name=aggregate-concept-transformer>
 
 ## First Line Troubleshooting
 
