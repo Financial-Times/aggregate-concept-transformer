@@ -16,6 +16,8 @@ import (
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
+
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 type AggregateConceptHandler struct {
@@ -52,10 +54,10 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(concept)
 }
 
-func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ConcordedConcept, string, error) {
+func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ontology.ConcordedConcept, string, error) {
 
 	type concordedTransaction struct {
-		Concept       ConcordedConcept
+		Concept       ontology.ConcordedConcept
 		TransactionID string
 		Err           error
 	}

@@ -7,14 +7,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
-	"sync"
-
-	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
 func TestHandlers(t *testing.T) {
@@ -25,7 +26,7 @@ func TestHandlers(t *testing.T) {
 		resultCode    int
 		resultBody    string
 		err           error
-		concepts      map[string]ConcordedConcept
+		concepts      map[string]ontology.ConcordedConcept
 		notifications []sqs.ConceptUpdate
 		healthchecks  []fthealth.Check
 		cancelContext bool
@@ -35,7 +36,7 @@ func TestHandlers(t *testing.T) {
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 			resultCode: 200,
 			resultBody: "{\"prefUUID\":\"f7fd05ea-9999-47c0-9be9-c99dd84d0097\",\"prefLabel\":\"TestConcept\"}\n",
-			concepts: map[string]ConcordedConcept{
+			concepts: map[string]ontology.ConcordedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 					PrefLabel: "TestConcept",
@@ -54,7 +55,7 @@ func TestHandlers(t *testing.T) {
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097/send",
 			resultCode: 200,
 			resultBody: "{\"message\":\"Concept f7fd05ea-9999-47c0-9be9-c99dd84d0097 updated successfully.\"}",
-			concepts: map[string]ConcordedConcept{
+			concepts: map[string]ontology.ConcordedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 					PrefLabel: "TestConcept",
@@ -135,13 +136,13 @@ func TestHandlers(t *testing.T) {
 
 type MockService struct {
 	notifications []sqs.ConceptUpdate
-	concepts      map[string]ConcordedConcept
+	concepts      map[string]ontology.ConcordedConcept
 	m             sync.RWMutex
 	healthchecks  []fthealth.Check
 	err           error
 }
 
-func NewMockService(concepts map[string]ConcordedConcept, notifications []sqs.ConceptUpdate, healthchecks []fthealth.Check, err error) Service {
+func NewMockService(concepts map[string]ontology.ConcordedConcept, notifications []sqs.ConceptUpdate, healthchecks []fthealth.Check, err error) Service {
 	return &MockService{
 		concepts:      concepts,
 		notifications: notifications,
@@ -164,14 +165,14 @@ func (s *MockService) ProcessMessage(ctx context.Context, UUID string, bookmark 
 	return nil
 }
 
-func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error) {
+func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
 	if s.err != nil {
-		return ConcordedConcept{}, "", s.err
+		return ontology.ConcordedConcept{}, "", s.err
 	}
 	if c, ok := s.concepts[UUID]; ok {
 		return c, "tid", nil
 	}
-	return ConcordedConcept{}, "", s.err
+	return ontology.ConcordedConcept{}, "", s.err
 }
 
 func (s *MockService) Healthchecks() []fthealth.Check {

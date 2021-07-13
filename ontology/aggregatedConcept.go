@@ -1,8 +1,4 @@
-package concept
-
-import (
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
-)
+package ontology
 
 type MembershipRole struct {
 	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
@@ -66,5 +62,5 @@ type ConcordedConcept struct {
 	// IndustryClassification
 	IndustryIdentifier string `json:"industryIdentifier,omitempty"`
 	// Source representations
-	SourceRepresentations []ontology.SourceConcept `json:"sourceRepresentations,omitempty"`
+	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }

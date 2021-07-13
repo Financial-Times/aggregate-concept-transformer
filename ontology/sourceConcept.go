@@ -1,16 +1,5 @@
 package ontology
 
-type MembershipRole struct {
-	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
-	InceptionDate   string `json:"inceptionDate,omitempty"`
-	TerminationDate string `json:"terminationDate,omitempty"`
-}
-
-type NAICSIndustryClassification struct {
-	UUID string `json:"uuid,omitempty"`
-	Rank int    `json:"rank,omitempty"`
-}
-
 type SourceConcept struct {
 	// Required fields
 	UUID      string `json:"uuid,omitempty"`
