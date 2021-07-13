@@ -496,8 +496,19 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
+	c.SourceRepresentations = append(c.SourceRepresentations, s)
+	c.IsDeprecated = s.IsDeprecated
+	buildScopeNoteOptions(scopeNoteOptions, s)
+	// []string
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
+	if len(s.TradeNames) > 0 {
+		c.TradeNames = s.TradeNames
+	}
+	if len(s.FormerNames) > 0 {
+		c.FormerNames = s.FormerNames
+	}
+	// string
 	if s.Strapline != "" {
 		c.Strapline = s.Strapline
 	}
@@ -516,34 +527,14 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 	if s.TwitterHandle != "" {
 		c.TwitterHandle = s.TwitterHandle
 	}
-	buildScopeNoteOptions(scopeNoteOptions, s)
 	if s.ShortLabel != "" {
 		c.ShortLabel = s.ShortLabel
 	}
-	if len(s.SupersededByUUIDs) > 0 {
-		c.SupersededByUUIDs = s.SupersededByUUIDs
-	}
-	if len(s.ParentUUIDs) > 0 {
-		c.ParentUUIDs = s.ParentUUIDs
-	}
-	if len(s.BroaderUUIDs) > 0 {
-		c.BroaderUUIDs = s.BroaderUUIDs
-	}
-	if len(s.RelatedUUIDs) > 0 {
-		c.RelatedUUIDs = s.RelatedUUIDs
-	}
-	c.SourceRepresentations = append(c.SourceRepresentations, s)
 	if s.ProperName != "" {
 		c.ProperName = s.ProperName
 	}
 	if s.ShortName != "" {
 		c.ShortName = s.ShortName
-	}
-	if len(s.TradeNames) > 0 {
-		c.TradeNames = s.TradeNames
-	}
-	if len(s.FormerNames) > 0 {
-		c.FormerNames = s.FormerNames
 	}
 	if s.CountryCode != "" {
 		c.CountryCode = s.CountryCode
@@ -560,14 +551,8 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 	if s.PostalCode != "" {
 		c.PostalCode = s.PostalCode
 	}
-	if s.YearFounded > 0 {
-		c.YearFounded = s.YearFounded
-	}
 	if s.LeiCode != "" {
 		c.LeiCode = s.LeiCode
-	}
-	if s.BirthYear > 0 {
-		c.BirthYear = s.BirthYear
 	}
 	if s.Salutation != "" {
 		c.Salutation = s.Salutation
@@ -575,7 +560,40 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 	if s.ISO31661 != "" {
 		c.ISO31661 = s.ISO31661
 	}
+	if s.InceptionDate != "" {
+		c.InceptionDate = s.InceptionDate
+	}
+	if s.TerminationDate != "" {
+		c.TerminationDate = s.TerminationDate
+	}
+	if s.FigiCode != "" {
+		c.FigiCode = s.FigiCode
+	}
+	if s.IndustryIdentifier != "" {
+		c.IndustryIdentifier = s.IndustryIdentifier
+	}
 
+	// int
+	if s.YearFounded > 0 {
+		c.YearFounded = s.YearFounded
+	}
+	if s.BirthYear > 0 {
+		c.BirthYear = s.BirthYear
+	}
+
+	// relations
+	if len(s.SupersededByUUIDs) > 0 {
+		c.SupersededByUUIDs = s.SupersededByUUIDs
+	}
+	if len(s.ParentUUIDs) > 0 {
+		c.ParentUUIDs = s.ParentUUIDs
+	}
+	if len(s.BroaderUUIDs) > 0 {
+		c.BroaderUUIDs = s.BroaderUUIDs
+	}
+	if len(s.RelatedUUIDs) > 0 {
+		c.RelatedUUIDs = s.RelatedUUIDs
+	}
 	for _, mr := range s.MembershipRoles {
 		c.MembershipRoles = append(c.MembershipRoles, ontology.MembershipRole{
 			RoleUUID:        mr.RoleUUID,
@@ -583,7 +601,6 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 			TerminationDate: mr.TerminationDate,
 		})
 	}
-
 	for _, ic := range s.NAICSIndustryClassifications {
 		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, ontology.NAICSIndustryClassification{
 			UUID: ic.UUID,
@@ -597,22 +614,9 @@ func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceCon
 	if s.PersonUUID != "" {
 		c.PersonUUID = s.PersonUUID
 	}
-	if s.InceptionDate != "" {
-		c.InceptionDate = s.InceptionDate
-	}
-	if s.TerminationDate != "" {
-		c.TerminationDate = s.TerminationDate
-	}
-	if s.FigiCode != "" {
-		c.FigiCode = s.FigiCode
-	}
 	if s.IssuedBy != "" {
 		c.IssuedBy = s.IssuedBy
 	}
-	if s.IndustryIdentifier != "" {
-		c.IndustryIdentifier = s.IndustryIdentifier
-	}
-	c.IsDeprecated = s.IsDeprecated
 	return c
 }
 
