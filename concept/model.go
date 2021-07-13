@@ -1,7 +1,7 @@
 package concept
 
 import (
-	"github.com/Financial-Times/aggregate-concept-transformer/s3"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 type MembershipRole struct {
@@ -66,5 +66,5 @@ type ConcordedConcept struct {
 	// IndustryClassification
 	IndustryIdentifier string `json:"industryIdentifier,omitempty"`
 	// Source representations
-	SourceRepresentations []s3.Concept `json:"sourceRepresentations,omitempty"`
+	SourceRepresentations []ontology.SourceConcept `json:"sourceRepresentations,omitempty"`
 }

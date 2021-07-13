@@ -13,12 +13,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
-	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
-	"github.com/Financial-Times/aggregate-concept-transformer/s3"
-	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	logger "github.com/Financial-Times/go-logger"
+
+	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
+	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/s3"
+	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
 const (
@@ -373,7 +375,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept s3.Concept
+			var sourceConcept ontology.SourceConcept
 			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
 				return ConcordedConcept{}, "", err
@@ -395,7 +397,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
 		var found bool
-		var primaryConcept s3.Concept
+		var primaryConcept ontology.SourceConcept
 		found, primaryConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
 			return ConcordedConcept{}, "", err
@@ -478,7 +480,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s s3.Concept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s ontology.SourceConcept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -490,7 +492,7 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s s3.Concept) {
 	}
 }
 
-func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept, scopeNoteOptions map[string][]string) ConcordedConcept {
+func mergeCanonicalInformation(c ConcordedConcept, s ontology.SourceConcept, scopeNoteOptions map[string][]string) ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)

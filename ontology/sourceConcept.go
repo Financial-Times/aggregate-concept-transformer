@@ -1,4 +1,4 @@
-package s3
+package ontology
 
 type MembershipRole struct {
 	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
@@ -11,7 +11,7 @@ type NAICSIndustryClassification struct {
 	Rank int    `json:"rank,omitempty"`
 }
 
-type Concept struct {
+type SourceConcept struct {
 	// Required fields
 	UUID      string `json:"uuid,omitempty"`
 	Type      string `json:"type,omitempty"`
