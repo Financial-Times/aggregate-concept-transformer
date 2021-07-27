@@ -352,10 +352,9 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 }
 
 func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
-	var scopeNoteOptions = map[string][]string{}
 	var transactionID string
 	var err error
-	concordedConcept := ontology.ConcordedConcept{}
+	var sourceConcepts []ontology.SourceConcept
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
@@ -390,7 +389,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 				sourceConcept.Type = "Thing"
 			}
 
-			concordedConcept = mergeCanonicalInformation(concordedConcept, sourceConcept, scopeNoteOptions)
+			sourceConcepts = append(sourceConcepts, sourceConcept)
 		}
 	}
 
@@ -406,7 +405,14 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			logger.WithField("UUID", UUID).Error(err.Error())
 			return ontology.ConcordedConcept{}, "", err
 		}
-		concordedConcept = mergeCanonicalInformation(concordedConcept, primaryConcept, scopeNoteOptions)
+		sourceConcepts = append(sourceConcepts, primaryConcept)
+	}
+
+	var scopeNoteOptions = map[string][]string{}
+	concordedConcept := ontology.ConcordedConcept{}
+	for _, source := range sourceConcepts {
+		buildScopeNoteOptions(scopeNoteOptions, source)
+		concordedConcept = mergeCanonicalInformation(concordedConcept, source)
 	}
 	concordedConcept.Aliases = deduplicateAndSkipEmptyAliases(concordedConcept.Aliases)
 	concordedConcept.ScopeNote = chooseScopeNote(concordedConcept, scopeNoteOptions)
@@ -492,13 +498,12 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s ontology.SourceConc
 	}
 }
 
-func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceConcept, scopeNoteOptions map[string][]string) ontology.ConcordedConcept {
+func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceConcept) ontology.ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
 	c.IsDeprecated = s.IsDeprecated
-	buildScopeNoteOptions(scopeNoteOptions, s)
 	// []string
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
