@@ -29,10 +29,29 @@
     ],
     "leiCode": "213800KZEW5W6BZMNT62",
     "parentOrganisation": "123",
+    "parentUUIDs": ["dummy_uuid"],
     "postalCode": "IM9 2RG",
     "properName": "Strix Group Plc",
     "shortName": "Strix Group",
-    "yearFounded": 1951
+    "yearFounded": 1951,
+    "naicsIndustryClassifications": [
+      {
+        "uuid": "25c3be2a-15e0-434e-aaa9-ca067e70ae11",
+        "rank": 1
+      },
+      {
+        "uuid": "c9cae3ee-a804-4001-8046-02e714e1fa5b",
+        "rank": 2
+      },
+      {
+        "uuid": "7f0134c1-606a-4d12-a455-661cc4b0bfac",
+        "rank": 3
+      },
+      {
+        "uuid": "c35b851c-d185-40bd-967c-2403084920b3",
+        "rank": 4
+      }
+    ]
   },
   {
     "uuid": "a141f50f-31d7-4f89-8143-eec971e54ba8",

@@ -57,10 +57,18 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 
 		// Most relationships are just copied over and override the fields
 		// Only MembershipRoles and NAICS are aggregated
-		if rel, has := GetConfig().Relationships[label]; has {
-			if rel.AggregateStrategy == "aggregate" {
-				aggMap[label] = append(aggMap[label].([]interface{}), val)
-			} else {
+		// looping over every relation config for every field is slow, maybe create on init map[conceptField]strategy.
+		for _, rel := range GetConfig().Relationships {
+			if rel.ConceptField != label {
+				continue
+			}
+			switch rel.AggregateStrategy {
+			case "aggregate":
+				if _, has := aggMap[label]; !has {
+					aggMap[label] = []interface{}{}
+				}
+				aggMap[label] = append(aggMap[label].([]interface{}), val.([]interface{})...)
+			case "override":
 				aggMap[label] = val
 			}
 		}
@@ -77,9 +85,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 
 	if len(s.TradeNames) > 0 {
 		c.TradeNames = s.TradeNames
-	}
-	if len(s.FormerNames) > 0 {
-		c.FormerNames = s.FormerNames
 	}
 	// string
 	if s.Strapline != "" {
@@ -111,9 +116,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 	}
 	if s.CountryCode != "" {
 		c.CountryCode = s.CountryCode
-	}
-	if s.CountryOfRisk != "" {
-		c.CountryOfRisk = s.CountryOfRisk
 	}
 	if s.CountryOfIncorporation != "" {
 		c.CountryOfIncorporation = s.CountryOfIncorporation
@@ -147,9 +149,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 	}
 
 	// int
-	if s.YearFounded > 0 {
-		c.YearFounded = s.YearFounded
-	}
 	if s.BirthYear > 0 {
 		c.BirthYear = s.BirthYear
 	}
@@ -157,9 +156,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 	// relations
 	if len(s.SupersededByUUIDs) > 0 {
 		c.SupersededByUUIDs = s.SupersededByUUIDs
-	}
-	if len(s.ParentUUIDs) > 0 {
-		c.ParentUUIDs = s.ParentUUIDs
 	}
 	if len(s.BroaderUUIDs) > 0 {
 		c.BroaderUUIDs = s.BroaderUUIDs
@@ -172,12 +168,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 			RoleUUID:        mr.RoleUUID,
 			InceptionDate:   mr.InceptionDate,
 			TerminationDate: mr.TerminationDate,
-		})
-	}
-	for _, ic := range s.NAICSIndustryClassifications {
-		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, NAICSIndustryClassification{
-			UUID: ic.UUID,
-			Rank: ic.Rank,
 		})
 	}
 

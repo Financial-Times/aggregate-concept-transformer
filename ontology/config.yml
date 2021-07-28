@@ -1,2 +1,19 @@
 fieldToNeoProps:
+  countryOfRisk: "countryOfRisk"
+  formerNames: "formerNames"
+  yearFounded: "yearFounded"
+
 relationships:
+  HAS_PARENT:
+    conceptField: "parentUUIDs"
+    aggregate_strategy: "override"
+    oneToOne: true
+  COUNTRY_OF_RISK:
+    conceptField: "countryOfRiskUUID"
+    oneToOne: true
+  HAS_INDUSTRY_CLASSIFICATION:
+    conceptField: "naicsIndustryClassifications"
+    neoCreate: true
+    aggregate_strategy: "aggregate"
+    toNodeWithLabel: "NAICSIndustryClassification"
+    properties: [ "rank" ]
