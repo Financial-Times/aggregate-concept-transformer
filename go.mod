@@ -1,6 +1,6 @@
 module github.com/Financial-Times/aggregate-concept-transformer
 
-go 1.15
+go 1.16
 
 require (
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
@@ -9,6 +9,7 @@ require (
 	github.com/Financial-Times/service-status-go v0.0.0-20160323111542-3f5199736a3d
 	github.com/Financial-Times/transactionid-utils-go v0.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.36.6
+	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/handlers v1.4.1
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/go-version v1.2.0 // indirect
@@ -17,4 +18,5 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/jarcoal/httpmock.v1 v1.0.0-20181025172632-c463961d8bfe
+	gopkg.in/yaml.v2 v2.2.8
 )
