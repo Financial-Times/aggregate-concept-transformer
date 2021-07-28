@@ -1,6 +1,10 @@
 package ontology
 
-import "strings"
+import (
+	"encoding/json"
+	"sort"
+	"strings"
+)
 
 const (
 	SmartlogicAuthority      = "Smartlogic"
@@ -19,15 +23,58 @@ func CreateAggregatedConcept(sources []SourceConcept) ConcordedConcept {
 	return concordedConcept
 }
 
+func mappify(i interface{}) map[string]interface{} {
+	data, _ := json.Marshal(i)
+	result := map[string]interface{}{}
+	json.Unmarshal(data, &result)
+	return result
+}
+func unmappify(m map[string]interface{}) ConcordedConcept {
+	data, _ := json.Marshal(m)
+	result := ConcordedConcept{}
+	json.Unmarshal(data, &result)
+	return result
+}
+
 func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedConcept {
+	specialFields := map[string]bool{
+		"uuid":    true,
+		"aliases": true,
+	}
+	sources := append(c.SourceRepresentations, s)
+	c.SourceRepresentations = nil // skip transforming sources to json
+	aggMap := mappify(c)
+	srcMap := mappify(s)
+	for label, val := range srcMap {
+		if specialFields[label] {
+			continue
+		}
+		// Currently all properties are just copied from the source to aggregated
+		// Should we add aggregate strategy for properties?
+		if _, has := GetConfig().FieldToNeoProps[label]; has {
+			aggMap[label] = val
+		}
+
+		// Most relationships are just copied over and override the fields
+		// Only MembershipRoles and NAICS are aggregated
+		if rel, has := GetConfig().Relationships[label]; has {
+			if rel.AggregateStrategy == "aggregate" {
+				aggMap[label] = append(aggMap[label].([]interface{}), val)
+			} else {
+				aggMap[label] = val
+			}
+		}
+	}
+	c = unmappify(aggMap)
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
-	c.SourceRepresentations = append(c.SourceRepresentations, s)
 	c.IsDeprecated = s.IsDeprecated
+	c.SourceRepresentations = sources
 	// []string
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
+
 	if len(s.TradeNames) > 0 {
 		c.TradeNames = s.TradeNames
 	}
@@ -158,6 +205,7 @@ func deduplicateAndSkipEmptyAliases(aliases []string) []string {
 	for a := range aMap {
 		outAliases = append(outAliases, a)
 	}
+	sort.Strings(outAliases)
 	return outAliases
 }
 
