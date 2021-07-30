@@ -246,8 +246,8 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 
 	//optionally purge other affected concepts
 	if concordedConcept.Type == "FinancialInstrument" {
-		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.SourceRepresentations[0].IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.SourceRepresentations[0].IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
+		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.SourceRepresentations[0].ToOldSourceConcept().IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.SourceRepresentations[0].ToOldSourceConcept().IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
 		}
 	}
 
@@ -381,10 +381,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			if !found {
 				//we should let the concorded concept to be written as a "Thing"
 				logger.WithField("UUID", UUID).Warn(fmt.Sprintf("Source concept %s not found in S3", conc))
-				sourceConcept.Authority = authority
-				sourceConcept.AuthValue = conc.AuthorityValue
-				sourceConcept.UUID = conc.UUID
-				sourceConcept.Type = "Thing"
+				sourceConcept["authority"] = authority
+				sourceConcept["authorityValue"] = conc.AuthorityValue
+				sourceConcept["uuid"] = conc.UUID
+				sourceConcept["type"] = "Thing"
 			}
 
 			sourceConcepts = append(sourceConcepts, sourceConcept)
@@ -630,7 +630,7 @@ func isTypeAllowedInElastic(concordedConcept ontology.ConcordedConcept) bool {
 	case "Membership":
 		for _, sr := range concordedConcept.SourceRepresentations {
 			//Allow smartlogic curated memberships through to elasticsearch as we will use them to discover authors
-			if sr.Authority == "Smartlogic" {
+			if sr["authority"] == "Smartlogic" {
 				return true
 			}
 		}

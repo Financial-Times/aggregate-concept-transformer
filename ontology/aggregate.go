@@ -36,23 +36,27 @@ func unmappify(m map[string]interface{}) ConcordedConcept {
 	return result
 }
 
-func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedConcept {
+func mergeCanonicalInformation(c ConcordedConcept, sc SourceConcept) ConcordedConcept {
 	specialFields := map[string]bool{
 		"uuid":    true,
 		"aliases": true,
 	}
-	sources := append(c.SourceRepresentations, s)
+	sources := append(c.SourceRepresentations, sc)
 	c.SourceRepresentations = nil // skip transforming sources to json
-	aggMap := mappify(c)
-	srcMap := mappify(s)
-	for label, val := range srcMap {
+	if c.Properties == nil {
+		c.Properties = map[string]interface{}{}
+	}
+	if c.Relationships == nil {
+		c.Relationships = map[string]interface{}{}
+	}
+	for label, val := range sc {
 		if specialFields[label] {
 			continue
 		}
 		// Currently all properties are just copied from the source to aggregated
 		// Should we add aggregate strategy for properties?
 		if _, has := GetConfig().FieldToNeoProps[label]; has {
-			aggMap[label] = val
+			c.Properties[label] = val
 		}
 
 		// Most relationships are just copied over and override the fields
@@ -64,16 +68,16 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept) ConcordedCon
 			}
 			switch rel.AggregateStrategy {
 			case "aggregate":
-				if _, has := aggMap[label]; !has {
-					aggMap[label] = []interface{}{}
+				if _, has := c.Relationships[label]; !has {
+					c.Relationships[label] = []interface{}{}
 				}
-				aggMap[label] = append(aggMap[label].([]interface{}), val.([]interface{})...)
+				c.Relationships[label] = append(c.Relationships[label].([]interface{}), val.([]interface{})...)
 			case "override":
-				aggMap[label] = val
+				c.Relationships[label] = val
 			}
 		}
 	}
-	c = unmappify(aggMap)
+	s := sc.ToOldSourceConcept()
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
@@ -215,13 +219,14 @@ func getMoreSpecificType(existingType string, newType string) string {
 
 func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
 	var newScopeNote string
-	if s.Authority == "TME" {
-		newScopeNote = s.PrefLabel
+	authority := s.GetStringProperty("authority")
+	if authority == "TME" {
+		newScopeNote = s.GetStringProperty("prefLabel")
 	} else {
-		newScopeNote = s.ScopeNote
+		newScopeNote = s.GetStringProperty("scopeNote")
 	}
 	if newScopeNote != "" {
-		scopeNotes[s.Authority] = append(scopeNotes[s.Authority], newScopeNote)
+		scopeNotes[authority] = append(scopeNotes[authority], newScopeNote)
 	}
 }
 

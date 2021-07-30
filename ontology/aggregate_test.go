@@ -23,7 +23,7 @@ func TestCreateAggregatedConcept(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			sources := readSources(t, test.Sources)
 			aggregated := readAggregated(t, test.Aggregated)
-			result := CreateAggregatedConcept(sources)
+			result, _ := CreateAggregatedConcept(sources).ToGeneric()
 			if !cmp.Equal(aggregated, result) {
 				diff := cmp.Diff(aggregated, result)
 				t.Fatal(diff)
@@ -51,9 +51,9 @@ func readSources(t *testing.T, filename string) []SourceConcept {
 	return result
 }
 
-func readAggregated(t *testing.T, filename string) ConcordedConcept {
+func readAggregated(t *testing.T, filename string) map[string]interface{} {
 	data := readFile(t, filename)
-	var result ConcordedConcept
+	var result map[string]interface{}
 	err := json.Unmarshal(data, &result)
 	if err != nil {
 		t.Fatal(err)

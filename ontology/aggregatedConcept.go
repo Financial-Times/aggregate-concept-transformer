@@ -1,5 +1,9 @@
 package ontology
 
+import (
+	"encoding/json"
+)
+
 type MembershipRole struct {
 	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
 	InceptionDate   string `json:"inceptionDate,omitempty"`
@@ -13,6 +17,8 @@ type NAICSIndustryClassification struct {
 
 // ConcordedConcept is the data model of the concept send for serialization to the writer service
 type ConcordedConcept struct {
+	Properties    map[string]interface{} `json:"-"`
+	Relationships map[string]interface{} `json:"-"`
 	// Required fields
 	PrefUUID  string `json:"prefUUID,omitempty"`
 	PrefLabel string `json:"prefLabel,omitempty"`
@@ -66,8 +72,48 @@ type ConcordedConcept struct {
 	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }
 
+func (cc ConcordedConcept) ToGeneric() (map[string]interface{}, error) {
+	data, err := json.Marshal(cc)
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range cc.Properties {
+		m[k] = v
+	}
+	for k, v := range cc.Relationships {
+		m[k] = v
+	}
+	return m, nil
+}
+
+type SourceConcept map[string]interface{}
+
+func (sc SourceConcept) ToOldSourceConcept() OldSourceConcept {
+	var result OldSourceConcept
+	data, _ := json.Marshal(sc)
+	json.Unmarshal(data, &result)
+	return result
+}
+
+func (sc SourceConcept) GetStringProperty(field string) string {
+	val, has := sc[field]
+	if !has {
+		return ""
+	}
+	str, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return str
+}
+
 // SourceConcept is the data model for concepts stored in the Normalized store
-type SourceConcept struct {
+type OldSourceConcept struct {
 	// Required fields
 	UUID      string `json:"uuid,omitempty"`
 	Type      string `json:"type,omitempty"`
