@@ -216,24 +216,30 @@ func main() {
 			logger.WithError(err).Fatal("Error creating S3 client")
 		}
 
-		conceptUpdatesSqsClient, err := sqs.NewClient(*sqsRegion, *conceptUpdatesQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating concept updates SQS client")
-		}
-
-		eventsQueueURL, err := sqs.NewClient(*sqsRegion, *eventsQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating concept events SQS client")
-		}
-
 		concordancesClient, err := concordances.NewClient(*concordancesReaderAddress)
 		if err != nil {
 			logger.WithError(err).Fatal("Error creating Concordances client")
 		}
 
-		kinesisClient, err := kinesis.NewClient(*kinesisStreamName, *kinesisRegion, *crossAccountRoleARN)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating Kinesis client")
+		var conceptUpdatesSqsClient sqs.Client
+		var eventsQueueClient sqs.Client
+		var kinesisClient kinesis.Client
+
+		if !*isReadOnly {
+			conceptUpdatesSqsClient, err = sqs.NewClient(*sqsRegion, *conceptUpdatesQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating concept updates SQS client")
+			}
+
+			eventsQueueClient, err = sqs.NewClient(*sqsRegion, *eventsQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating concept events SQS client")
+			}
+
+			kinesisClient, err = kinesis.NewClient(*kinesisStreamName, *kinesisRegion, *crossAccountRoleARN)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating Kinesis client")
+			}
 		}
 
 		feedback := make(chan bool)
@@ -244,7 +250,7 @@ func main() {
 		svc := concept.NewService(
 			s3Client,
 			conceptUpdatesSqsClient,
-			eventsQueueURL,
+			eventsQueueClient,
 			concordancesClient,
 			kinesisClient,
 			*neoWriterAddress,
