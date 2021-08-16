@@ -246,6 +246,9 @@ func main() {
 		done := make(chan struct{})
 
 		maxWorkers := runtime.GOMAXPROCS(0) + 1
+		if *isReadOnly {
+			maxWorkers = 0
+		}
 		requestTimeout := time.Second * time.Duration(*httpTimeout)
 		svc := concept.NewService(
 			s3Client,
