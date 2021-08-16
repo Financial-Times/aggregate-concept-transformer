@@ -3,11 +3,10 @@ package sqs
 import (
 	"context"
 	"encoding/json"
-	"regexp"
-	"strings"
-
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"

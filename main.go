@@ -161,6 +161,12 @@ func main() {
 		Desc:   "App log level",
 		EnvVar: "LOG_LEVEL",
 	})
+	isReadOnly := app.Bool(cli.BoolOpt{
+		Name:   "read-only",
+		Desc:   "Start service in ready only mode",
+		EnvVar: "READ_ONLY",
+		Value:  false,
+	})
 
 	app.Before = func() {
 		logger.InitLogger(*appSystemCode, *logLevel)
@@ -182,25 +188,25 @@ func main() {
 		if *bucketName == "" {
 			logger.Fatal("S3 bucket name not set")
 		}
-
-		if *conceptUpdatesQueueURL == "" {
-			logger.Fatal("Concept update SQS queue URL not set")
-		}
-
 		if *bucketRegion == "" {
 			logger.Fatal("AWS bucket region not set")
 		}
-
-		if *sqsRegion == "" {
-			logger.Fatal("AWS SQS region not set")
-		}
-
-		if *kinesisStreamName == "" {
-			logger.Fatal("Kinesis stream name not set")
-		}
-
 		if *concordancesReaderAddress == "" {
 			logger.Fatal("Concordances reader address not set")
+		}
+
+		if !*isReadOnly {
+			if *conceptUpdatesQueueURL == "" {
+				logger.Fatal("Concept update SQS queue URL not set")
+			}
+
+			if *sqsRegion == "" {
+				logger.Fatal("AWS SQS region not set")
+			}
+
+			if *kinesisStreamName == "" {
+				logger.Fatal("Kinesis stream name not set")
+			}
 		}
 	}
 
@@ -248,7 +254,8 @@ func main() {
 			defaultHTTPClient(maxWorkers),
 			feedback,
 			done,
-			requestTimeout)
+			requestTimeout,
+			*isReadOnly)
 
 		handler := concept.NewHandler(svc, requestTimeout)
 		hs := concept.NewHealthService(svc, *appSystemCode, *appName, *port, appDescription)
