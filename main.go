@@ -161,6 +161,12 @@ func main() {
 		Desc:   "App log level",
 		EnvVar: "LOG_LEVEL",
 	})
+	isReadOnly := app.Bool(cli.BoolOpt{
+		Name:   "read-only",
+		Desc:   "Start service in ready only mode",
+		EnvVar: "READ_ONLY",
+		Value:  false,
+	})
 
 	app.Before = func() {
 		logger.InitLogger(*appSystemCode, *logLevel)
@@ -182,25 +188,25 @@ func main() {
 		if *bucketName == "" {
 			logger.Fatal("S3 bucket name not set")
 		}
-
-		if *conceptUpdatesQueueURL == "" {
-			logger.Fatal("Concept update SQS queue URL not set")
-		}
-
 		if *bucketRegion == "" {
 			logger.Fatal("AWS bucket region not set")
 		}
-
-		if *sqsRegion == "" {
-			logger.Fatal("AWS SQS region not set")
-		}
-
-		if *kinesisStreamName == "" {
-			logger.Fatal("Kinesis stream name not set")
-		}
-
 		if *concordancesReaderAddress == "" {
 			logger.Fatal("Concordances reader address not set")
+		}
+
+		if !*isReadOnly {
+			if *conceptUpdatesQueueURL == "" {
+				logger.Fatal("Concept update SQS queue URL not set")
+			}
+
+			if *sqsRegion == "" {
+				logger.Fatal("AWS SQS region not set")
+			}
+
+			if *kinesisStreamName == "" {
+				logger.Fatal("Kinesis stream name not set")
+			}
 		}
 	}
 
@@ -210,35 +216,44 @@ func main() {
 			logger.WithError(err).Fatal("Error creating S3 client")
 		}
 
-		conceptUpdatesSqsClient, err := sqs.NewClient(*sqsRegion, *conceptUpdatesQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating concept updates SQS client")
-		}
-
-		eventsQueueURL, err := sqs.NewClient(*sqsRegion, *eventsQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating concept events SQS client")
-		}
-
 		concordancesClient, err := concordances.NewClient(*concordancesReaderAddress)
 		if err != nil {
 			logger.WithError(err).Fatal("Error creating Concordances client")
 		}
 
-		kinesisClient, err := kinesis.NewClient(*kinesisStreamName, *kinesisRegion, *crossAccountRoleARN)
-		if err != nil {
-			logger.WithError(err).Fatal("Error creating Kinesis client")
+		var conceptUpdatesSqsClient sqs.Client
+		var eventsQueueClient sqs.Client
+		var kinesisClient kinesis.Client
+
+		if !*isReadOnly {
+			conceptUpdatesSqsClient, err = sqs.NewClient(*sqsRegion, *conceptUpdatesQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating concept updates SQS client")
+			}
+
+			eventsQueueClient, err = sqs.NewClient(*sqsRegion, *eventsQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating concept events SQS client")
+			}
+
+			kinesisClient, err = kinesis.NewClient(*kinesisStreamName, *kinesisRegion, *crossAccountRoleARN)
+			if err != nil {
+				logger.WithError(err).Fatal("Error creating Kinesis client")
+			}
 		}
 
 		feedback := make(chan bool)
 		done := make(chan struct{})
 
 		maxWorkers := runtime.GOMAXPROCS(0) + 1
+		if *isReadOnly {
+			maxWorkers = 0
+		}
 		requestTimeout := time.Second * time.Duration(*httpTimeout)
 		svc := concept.NewService(
 			s3Client,
 			conceptUpdatesSqsClient,
-			eventsQueueURL,
+			eventsQueueClient,
 			concordancesClient,
 			kinesisClient,
 			*neoWriterAddress,
@@ -248,7 +263,8 @@ func main() {
 			defaultHTTPClient(maxWorkers),
 			feedback,
 			done,
-			requestTimeout)
+			requestTimeout,
+			*isReadOnly)
 
 		handler := concept.NewHandler(svc, requestTimeout)
 		hs := concept.NewHealthService(svc, *appSystemCode, *appName, *port, appDescription)

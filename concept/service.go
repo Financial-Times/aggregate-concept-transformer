@@ -13,12 +13,13 @@ import (
 	"sync"
 	"time"
 
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+	logger "github.com/Financial-Times/go-logger"
+
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
-	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	logger "github.com/Financial-Times/go-logger"
 )
 
 const (
@@ -96,6 +97,7 @@ type AggregateService struct {
 	typesToPurgeFromPublicEndpoints []string
 	health                          *systemHealth
 	processTimeout                  time.Duration
+	readOnly                        bool
 }
 
 func NewService(
@@ -111,8 +113,9 @@ func NewService(
 	httpClient httpClient,
 	feedback <-chan bool,
 	done <-chan struct{},
-	processTimeout time.Duration) *AggregateService {
-
+	processTimeout time.Duration,
+	readOnly bool,
+) *AggregateService {
 	health := &systemHealth{
 		healthy:  false, // Set to false. Once health check passes app will read from SQS
 		shutdown: false,
@@ -134,10 +137,14 @@ func NewService(
 		typesToPurgeFromPublicEndpoints: typesToPurgeFromPublicEndpoints,
 		health:                          health,
 		processTimeout:                  processTimeout,
+		readOnly:                        readOnly,
 	}
 }
 
 func (s *AggregateService) ListenForNotifications(ctx context.Context, workerID int) {
+	if s.readOnly {
+		return
+	}
 	listenCtx, listenCancel := context.WithCancel(context.Background())
 	defer listenCancel()
 	for {
@@ -206,6 +213,9 @@ func (s *AggregateService) processConceptUpdate(ctx context.Context, n sqs.Conce
 }
 
 func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, bookmark string) error {
+	if s.readOnly {
+		return errors.New("aggregate service is in read-only mode")
+	}
 	// Get the concorded concept
 	concordedConcept, transactionID, err := s.GetConcordedConcept(ctx, UUID, bookmark)
 	if err != nil {
@@ -438,15 +448,18 @@ func removeMatchingEntries(slice []string, matcher string) []string {
 }
 
 func (s *AggregateService) Healthchecks() []fthealth.Check {
-	return []fthealth.Check{
+	checks := []fthealth.Check{
 		s.s3.Healthcheck(),
-		s.conceptUpdatesSqs.Healthcheck(),
-		s.RWElasticsearchHealthCheck(),
-		s.RWNeo4JHealthCheck(),
-		s.VarnishPurgerHealthCheck(),
 		s.concordances.Healthcheck(),
-		s.kinesis.Healthcheck(),
 	}
+	if !s.readOnly {
+		checks = append(checks, s.conceptUpdatesSqs.Healthcheck())
+		checks = append(checks, s.RWElasticsearchHealthCheck())
+		checks = append(checks, s.RWNeo4JHealthCheck())
+		checks = append(checks, s.VarnishPurgerHealthCheck())
+		checks = append(checks, s.kinesis.Healthcheck())
+	}
+	return checks
 }
 
 func deduplicateAndSkipEmptyAliases(aliases []string) []string {

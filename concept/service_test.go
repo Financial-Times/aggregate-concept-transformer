@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -1835,6 +1836,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 		feedback,
 		done,
 		timeout,
+		false,
 	)
 
 	feedback <- true
