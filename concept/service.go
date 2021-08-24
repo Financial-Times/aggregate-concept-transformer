@@ -18,6 +18,7 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
@@ -41,7 +42,7 @@ var irregularConceptTypePaths = map[string]string{
 type Service interface {
 	ListenForNotifications(ctx context.Context, workerID int)
 	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error)
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error)
 	Healthchecks() []fthealth.Check
 }
 
@@ -338,10 +339,10 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error) {
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
 
 	type concordedData struct {
-		Concept       ConcordedConcept
+		Concept       ontology.ConcordedConcept
 		TransactionID string
 		Err           error
 	}
@@ -355,25 +356,25 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	case data := <-ch:
 		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return ConcordedConcept{}, "", ctx.Err()
+		return ontology.ConcordedConcept{}, "", ctx.Err()
 	}
 }
 
-func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error) {
+func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
 	var scopeNoteOptions = map[string][]string{}
 	var transactionID string
 	var err error
-	concordedConcept := ConcordedConcept{}
+	concordedConcept := ontology.ConcordedConcept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
-		return ConcordedConcept{}, "", err
+		return ontology.ConcordedConcept{}, "", err
 	}
 	logger.WithField("UUID", UUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
-		return ConcordedConcept{}, "", err
+		return ontology.ConcordedConcept{}, "", err
 	}
 
 	// Get all concepts from S3
@@ -383,10 +384,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept s3.Concept
+			var sourceConcept ontology.Concept
 			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
-				return ConcordedConcept{}, "", err
+				return ontology.ConcordedConcept{}, "", err
 			}
 
 			if !found {
@@ -405,14 +406,14 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
 		var found bool
-		var primaryConcept s3.Concept
+		var primaryConcept ontology.Concept
 		found, primaryConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
-			return ConcordedConcept{}, "", err
+			return ontology.ConcordedConcept{}, "", err
 		} else if !found {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
-			return ConcordedConcept{}, "", err
+			return ontology.ConcordedConcept{}, "", err
 		}
 		concordedConcept = mergeCanonicalInformation(concordedConcept, primaryConcept, scopeNoteOptions)
 	}
@@ -422,7 +423,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	return concordedConcept, transactionID, nil
 }
 
-func chooseScopeNote(concept ConcordedConcept, scopeNoteOptions map[string][]string) string {
+func chooseScopeNote(concept ontology.ConcordedConcept, scopeNoteOptions map[string][]string) string {
 	if sn, ok := scopeNoteOptions[smartlogicAuthority]; ok {
 		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
 	}
@@ -491,7 +492,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s s3.Concept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s ontology.Concept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -503,7 +504,7 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s s3.Concept) {
 	}
 }
 
-func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept, scopeNoteOptions map[string][]string) ConcordedConcept {
+func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.Concept, scopeNoteOptions map[string][]string) ontology.ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
@@ -588,7 +589,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept, scopeNoteOption
 	}
 
 	for _, mr := range s.MembershipRoles {
-		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
+		c.MembershipRoles = append(c.MembershipRoles, ontology.MembershipRole{
 			RoleUUID:        mr.RoleUUID,
 			InceptionDate:   mr.InceptionDate,
 			TerminationDate: mr.TerminationDate,
@@ -596,7 +597,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept, scopeNoteOption
 	}
 
 	for _, ic := range s.NAICSIndustryClassifications {
-		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, NAICSIndustryClassification{
+		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, ontology.NAICSIndustryClassification{
 			UUID: ic.UUID,
 			Rank: ic.Rank,
 		})
@@ -673,7 +674,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ConcordedConcept, tid string) (sqs.ConceptChanges, error) {
+func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.ConcordedConcept, tid string) (sqs.ConceptChanges, error) {
 
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
@@ -825,7 +826,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept ConcordedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept ontology.ConcordedConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false
