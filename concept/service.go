@@ -361,10 +361,9 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 }
 
 func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
-	var scopeNoteOptions = map[string][]string{}
 	var transactionID string
 	var err error
-	concordedConcept := ontology.ConcordedConcept{}
+	sources := []ontology.Concept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
@@ -398,8 +397,8 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 				sourceConcept.UUID = conc.UUID
 				sourceConcept.Type = "Thing"
 			}
+			sources = append(sources, sourceConcept)
 
-			concordedConcept = mergeCanonicalInformation(concordedConcept, sourceConcept, scopeNoteOptions)
 		}
 	}
 
@@ -415,8 +414,15 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			logger.WithField("UUID", UUID).Error(err.Error())
 			return ontology.ConcordedConcept{}, "", err
 		}
-		concordedConcept = mergeCanonicalInformation(concordedConcept, primaryConcept, scopeNoteOptions)
+		sources = append(sources, primaryConcept)
 	}
+
+	var scopeNoteOptions = map[string][]string{}
+	concordedConcept := ontology.ConcordedConcept{}
+	for _, src := range sources {
+		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
+	}
+
 	concordedConcept.Aliases = deduplicateAndSkipEmptyAliases(concordedConcept.Aliases)
 	concordedConcept.ScopeNote = chooseScopeNote(concordedConcept, scopeNoteOptions)
 
