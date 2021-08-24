@@ -338,7 +338,6 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 }
 
 func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.ConcordedConcept, string, error) {
-
 	type concordedData struct {
 		Concept       ontology.ConcordedConcept
 		TransactionID string
@@ -482,7 +481,6 @@ func contains(element string, types []string) bool {
 }
 
 func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.ConcordedConcept, tid string) (sqs.ConceptChanges, error) {
-
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {

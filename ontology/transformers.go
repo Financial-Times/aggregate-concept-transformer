@@ -62,7 +62,6 @@ func deduplicateAndSkipEmptyAliases(aliases []string) []string {
 }
 
 func getMoreSpecificType(existingType string, newType string) string {
-
 	// Thing type shouldn't wipe things.
 	if newType == "Thing" && existingType != "" {
 		return existingType
@@ -87,6 +86,7 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s Concept) {
 	}
 }
 
+// nolint:gocognit // in the process of simplifying this function
 func mergeCanonicalInformation(c ConcordedConcept, s Concept, scopeNoteOptions map[string][]string) ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel

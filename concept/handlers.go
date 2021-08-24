@@ -55,7 +55,6 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ontology.ConcordedConcept, string, error) {
-
 	type concordedTransaction struct {
 		Concept       ontology.ConcordedConcept
 		TransactionID string
