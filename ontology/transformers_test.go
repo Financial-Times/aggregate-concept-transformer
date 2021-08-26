@@ -38,21 +38,21 @@ func TestCreateAggregateConcept(t *testing.T) {
 	}
 }
 
-func sortAliases(concorded *ontology.ConcordedConcept) {
+func sortAliases(concorded *ontology.OldConcordedConcept) {
 	sort.Strings(concorded.Aliases)
 	for idx := 0; idx < len(concorded.SourceRepresentations); idx++ {
 		sort.Strings(concorded.SourceRepresentations[idx].Aliases)
 	}
 }
 
-func readSourcesFixture(t *testing.T, fixture string) []ontology.Concept {
+func readSourcesFixture(t *testing.T, fixture string) []ontology.OldConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := []ontology.Concept{}
+	result := []ontology.OldConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -60,14 +60,14 @@ func readSourcesFixture(t *testing.T, fixture string) []ontology.Concept {
 	return result
 }
 
-func readAggregateFixture(t *testing.T, fixture string) ontology.ConcordedConcept {
+func readAggregateFixture(t *testing.T, fixture string) ontology.OldConcordedConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := ontology.ConcordedConcept{}
+	result := ontology.OldConcordedConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
