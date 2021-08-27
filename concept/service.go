@@ -357,6 +357,7 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	}
 }
 
+// nolint: gocognit // TODO: fix 'cognitive complexity 21 of func `(*AggregateService).getConcordedConcept` is high (> 20) (gocognit)'
 func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
 	var transactionID string
 	var err error
@@ -416,7 +417,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 
 	var sources []ontology.SourceConcept
 	for _, old := range oldConcepts {
-		sourceConcept, err := old.ToSourceConcept()
+		sourceConcept, err := old.ToSourceConcept() //nolint: govet // we don't care that err is shadow
 		if err != nil {
 			logger.WithError(err).WithTransactionID(transactionID).WithUUID(old.UUID).Error("failed to transform concept to new format")
 			return ontology.OldConcordedConcept{}, "", err
