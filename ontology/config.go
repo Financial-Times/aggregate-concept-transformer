@@ -39,3 +39,7 @@ func init() {
 func GetConfig() Config {
 	return config
 }
+
+func setGlobalConfig(cfg Config) {
+	config = cfg
+}

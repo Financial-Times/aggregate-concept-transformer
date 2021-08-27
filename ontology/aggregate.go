@@ -12,6 +12,7 @@ const (
 func CreateAggregateConcept(sources []SourceConcept) ConcordedConcept {
 	var scopeNoteOptions = map[string][]string{}
 	concordedConcept := ConcordedConcept{}
+	concordedConcept.Fields = map[string]interface{}{} // initialise Fields to be able to safely access it later
 	for _, src := range sources {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
@@ -93,6 +94,14 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
+	for key := range GetConfig().FieldToNeoProps {
+		val, has := s.Fields[key]
+		if !has {
+			continue
+		}
+		c.Fields[key] = val
+	}
+
 	if s.Strapline != "" {
 		c.Strapline = s.Strapline
 	}

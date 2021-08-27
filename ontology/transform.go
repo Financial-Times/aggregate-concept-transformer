@@ -2,7 +2,7 @@ package ontology
 
 import "encoding/json"
 
-func (sc SourceConcept) ToOldConcept() (OldConcept, error) {
+func (sc *SourceConcept) ToOldConcept() (OldConcept, error) {
 	data, err := json.Marshal(sc)
 	if err != nil {
 		return OldConcept{}, err
@@ -28,7 +28,7 @@ func (sc OldConcept) ToSourceConcept() (SourceConcept, error) {
 	return result, nil
 }
 
-func (cc ConcordedConcept) ToOldConcordedConcept() (OldConcordedConcept, error) {
+func (cc *ConcordedConcept) ToOldConcordedConcept() (OldConcordedConcept, error) {
 	data, err := json.Marshal(cc)
 	if err != nil {
 		return OldConcordedConcept{}, err
