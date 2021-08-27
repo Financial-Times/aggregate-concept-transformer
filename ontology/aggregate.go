@@ -9,9 +9,9 @@ const (
 	ManagedLocationAuthority = "ManagedLocation"
 )
 
-func CreateAggregateConcept(sources []OldConcept) OldConcordedConcept {
+func CreateAggregateConcept(sources []SourceConcept) ConcordedConcept {
 	var scopeNoteOptions = map[string][]string{}
-	concordedConcept := OldConcordedConcept{}
+	concordedConcept := ConcordedConcept{}
 	for _, src := range sources {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
@@ -21,7 +21,7 @@ func CreateAggregateConcept(sources []OldConcept) OldConcordedConcept {
 	return concordedConcept
 }
 
-func chooseScopeNote(concept OldConcordedConcept, scopeNoteOptions map[string][]string) string {
+func chooseScopeNote(concept ConcordedConcept, scopeNoteOptions map[string][]string) string {
 	if sn, ok := scopeNoteOptions[SmartlogicAuthority]; ok {
 		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
 	}
@@ -74,7 +74,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s OldConcept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -87,7 +87,7 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s OldConcept) {
 }
 
 // nolint:gocognit // in the process of simplifying this function
-func mergeCanonicalInformation(c OldConcordedConcept, s OldConcept, scopeNoteOptions map[string][]string) OldConcordedConcept {
+func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOptions map[string][]string) ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)

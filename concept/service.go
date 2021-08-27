@@ -360,7 +360,7 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
 	var transactionID string
 	var err error
-	sources := []ontology.OldConcept{}
+	oldConcepts := []ontology.OldConcept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
@@ -394,7 +394,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 				sourceConcept.UUID = conc.UUID
 				sourceConcept.Type = "Thing"
 			}
-			sources = append(sources, sourceConcept)
+			oldConcepts = append(oldConcepts, sourceConcept)
 
 		}
 	}
@@ -411,12 +411,26 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			logger.WithField("UUID", UUID).Error(err.Error())
 			return ontology.OldConcordedConcept{}, "", err
 		}
-		sources = append(sources, primaryConcept)
+		oldConcepts = append(oldConcepts, primaryConcept)
 	}
 
+	var sources []ontology.SourceConcept
+	for _, old := range oldConcepts {
+		sourceConcept, err := old.ToSourceConcept()
+		if err != nil {
+			logger.WithError(err).WithTransactionID(transactionID).WithUUID(old.UUID).Error("failed to transform concept to new format")
+			return ontology.OldConcordedConcept{}, "", err
+		}
+		sources = append(sources, sourceConcept)
+	}
 	concordedConcept := ontology.CreateAggregateConcept(sources)
+	oldConcorded, err := concordedConcept.ToOldConcordedConcept()
+	if err != nil {
+		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")
+		return ontology.OldConcordedConcept{}, "", err
+	}
 
-	return concordedConcept, transactionID, nil
+	return oldConcorded, transactionID, nil
 }
 
 func (s *AggregateService) Healthchecks() []fthealth.Check {
