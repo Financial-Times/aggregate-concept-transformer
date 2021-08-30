@@ -9,6 +9,7 @@ require (
 	github.com/Financial-Times/service-status-go v0.0.0-20160323111542-3f5199736a3d
 	github.com/Financial-Times/transactionid-utils-go v0.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.36.6
+	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/handlers v1.4.1
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/go-version v1.2.0 // indirect
