@@ -1,6 +1,6 @@
 module github.com/Financial-Times/aggregate-concept-transformer
 
-go 1.15
+go 1.16
 
 require (
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
@@ -18,4 +18,5 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/jarcoal/httpmock.v1 v1.0.0-20181025172632-c463961d8bfe
+	gopkg.in/yaml.v2 v2.2.8
 )

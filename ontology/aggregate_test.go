@@ -1,4 +1,4 @@
-package ontology_test
+package ontology
 
 import (
 	"encoding/json"
@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 func TestCreateAggregateConcept(t *testing.T) {
@@ -27,7 +25,7 @@ func TestCreateAggregateConcept(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			sources := readSourcesFixture(t, test.Sources)
 			expected := readAggregateFixture(t, test.Aggregate)
-			actual := ontology.CreateAggregateConcept(sources)
+			actual := CreateAggregateConcept(sources)
 			sortAliases(&expected)
 			sortAliases(&actual)
 			if !cmp.Equal(expected, actual) {
@@ -38,21 +36,52 @@ func TestCreateAggregateConcept(t *testing.T) {
 	}
 }
 
-func sortAliases(concorded *ontology.ConcordedConcept) {
+func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
+	// WARNING: don't run this test parallel with others. It changes the global config.
+	test := struct {
+		Sources   string
+		Aggregate string
+	}{
+		Sources:   "testdata/dummy-config/sources.json",
+		Aggregate: "testdata/dummy-config/aggregate.json",
+	}
+
+	// backup config before modifying it.
+	backup := GetConfig()
+	defer setGlobalConfig(backup)
+
+	cfg := backup
+	cfg.FieldToNeoProps = map[string]string{
+		"test": "test",
+	}
+	setGlobalConfig(cfg)
+
+	sources := readSourcesFixture(t, test.Sources)
+	expected := readAggregateFixture(t, test.Aggregate)
+	actual := CreateAggregateConcept(sources)
+	sortAliases(&expected)
+	sortAliases(&actual)
+	if !cmp.Equal(expected, actual) {
+		diff := cmp.Diff(expected, actual)
+		t.Fatal(diff)
+	}
+}
+
+func sortAliases(concorded *ConcordedConcept) {
 	sort.Strings(concorded.Aliases)
 	for idx := 0; idx < len(concorded.SourceRepresentations); idx++ {
 		sort.Strings(concorded.SourceRepresentations[idx].Aliases)
 	}
 }
 
-func readSourcesFixture(t *testing.T, fixture string) []ontology.Concept {
+func readSourcesFixture(t *testing.T, fixture string) []SourceConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := []ontology.Concept{}
+	result := []SourceConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -60,14 +89,14 @@ func readSourcesFixture(t *testing.T, fixture string) []ontology.Concept {
 	return result
 }
 
-func readAggregateFixture(t *testing.T, fixture string) ontology.ConcordedConcept {
+func readAggregateFixture(t *testing.T, fixture string) ConcordedConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := ontology.ConcordedConcept{}
+	result := ConcordedConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)

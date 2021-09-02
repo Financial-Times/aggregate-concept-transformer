@@ -11,8 +11,8 @@ type NAICSIndustryClassification struct {
 	Rank int    `json:"rank,omitempty"`
 }
 
-// ConcordedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
-type ConcordedConcept struct {
+// OldConcordedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
+type OldConcordedConcept struct {
 	// Required fields
 	PrefUUID  string `json:"prefUUID,omitempty"`
 	PrefLabel string `json:"prefLabel,omitempty"`
@@ -63,11 +63,11 @@ type ConcordedConcept struct {
 	// IndustryClassification
 	IndustryIdentifier string `json:"industryIdentifier,omitempty"`
 	// Source representations
-	SourceRepresentations []Concept `json:"sourceRepresentations,omitempty"`
+	SourceRepresentations []OldConcept `json:"sourceRepresentations,omitempty"`
 }
 
-// Concept is the model of the source concept stored in the Normalized store
-type Concept struct {
+// OldConcept is the model of the source concept stored in the Normalized store
+type OldConcept struct {
 	// Required fields
 	UUID      string `json:"uuid,omitempty"`
 	Type      string `json:"type,omitempty"`

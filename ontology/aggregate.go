@@ -9,9 +9,10 @@ const (
 	ManagedLocationAuthority = "ManagedLocation"
 )
 
-func CreateAggregateConcept(sources []Concept) ConcordedConcept {
+func CreateAggregateConcept(sources []SourceConcept) ConcordedConcept {
 	var scopeNoteOptions = map[string][]string{}
 	concordedConcept := ConcordedConcept{}
+	concordedConcept.Fields = map[string]interface{}{} // initialise Fields to be able to safely access it later
 	for _, src := range sources {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
@@ -74,7 +75,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s Concept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -87,12 +88,20 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s Concept) {
 }
 
 // nolint:gocognit // in the process of simplifying this function
-func mergeCanonicalInformation(c ConcordedConcept, s Concept, scopeNoteOptions map[string][]string) ConcordedConcept {
+func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOptions map[string][]string) ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
+	for key := range GetConfig().FieldToNeoProps {
+		val, has := s.Fields[key]
+		if !has {
+			continue
+		}
+		c.Fields[key] = val
+	}
+
 	if s.Strapline != "" {
 		c.Strapline = s.Strapline
 	}
