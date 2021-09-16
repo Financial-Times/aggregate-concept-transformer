@@ -85,7 +85,7 @@ func (sc *SourceConcept) MarshalJSON() ([]byte, error) {
 	// TODO: ensure that fields are not overlapping
 	for key, val := range sc.Fields {
 		// serialize only fields defined in the config
-		if _, has := GetConfig().FieldToNeoProps[key]; !has {
+		if !GetConfig().HasField(key) {
 			continue
 		}
 		result[key] = val
@@ -114,7 +114,7 @@ func (sc *SourceConcept) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 	sc.Fields = map[string]interface{}{}
-	for key := range GetConfig().FieldToNeoProps {
+	for key := range GetConfig().Fields {
 		val, has := fields[key]
 		if !has {
 			continue

@@ -94,7 +94,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
-	for key := range GetConfig().FieldToNeoProps {
+	for key := range GetConfig().Fields {
 		val, has := s.Fields[key]
 		if !has {
 			continue

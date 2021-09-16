@@ -51,8 +51,8 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	defer setGlobalConfig(backup)
 
 	cfg := backup
-	cfg.FieldToNeoProps = map[string]string{
-		"test": "test",
+	cfg.Fields = map[string]FieldConfig{
+		"test": {NeoProp: "test"},
 	}
 	setGlobalConfig(cfg)
 
