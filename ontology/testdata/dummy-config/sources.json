@@ -4,7 +4,11 @@
     "type": "Thing",
     "authority": "Geonames",
     "authorityValue": "http://sws.geonames.org/732800",
-    "test": "new-test-field"
+    "test": "new-test-field",
+    "relOverride": "relationship-0",
+    "relAggregate": [
+      "relationship-0"
+    ]
   },
   {
     "uuid": "91298f98-7950-3bc9-88e2-5c434cf6dd6e",
@@ -12,6 +16,10 @@
     "prefLabel": "Bulgaria",
     "authority": "TME",
     "authorityValue": "TnN0ZWluX0dMX0JH-R0w=",
+    "relOverride": "new-relationship-1",
+    "relAggregate": [
+      "relationship-1"
+    ],
     "aliases": [
       "Bulgaria",
       "Bulgarie",

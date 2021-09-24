@@ -94,12 +94,23 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
-	for key := range GetConfig().Fields {
-		val, has := s.Fields[key]
-		if !has {
+
+	for key, val := range s.Fields {
+		if GetConfig().HasField(key) {
+			c.Fields[key] = val
 			continue
 		}
-		c.Fields[key] = val
+
+		switch GetConfig().MergingStrategies[key] {
+		case OverwriteStrategy:
+			c.Fields[key] = val
+		case AggregateStrategy:
+			if _, has := c.Fields[key]; !has {
+				c.Fields[key] = []interface{}{}
+			}
+			// TODO: test casting
+			c.Fields[key] = append(c.Fields[key].([]interface{}), val.([]interface{})...)
+		}
 	}
 
 	if s.Strapline != "" {

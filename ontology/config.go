@@ -9,6 +9,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type MergingStrategy string
+
+const (
+	OverwriteStrategy MergingStrategy = "overwrite"
+	AggregateStrategy MergingStrategy = "aggregate"
+)
+
 type FieldConfig struct {
 	NeoProp   string `yaml:"neoProp"`
 	FieldType string `yaml:"type"`
@@ -20,12 +27,17 @@ type RelationshipConfig struct {
 	NeoCreate       bool     `yaml:"neoCreate"`
 	Properties      []string `yaml:"properties"`
 	ToNodeWithLabel string   `yaml:"toNodeWithLabel"`
+
+	Strategy MergingStrategy `yaml:"mergingStrategy"`
 }
 
 type Config struct {
 	Fields        map[string]FieldConfig        `yaml:"fields"`
 	Relationships map[string]RelationshipConfig `yaml:"relationships"`
 	Authorities   []string                      `yaml:"authorities"`
+
+	// MergingStrategies contains the explicitly specified merging strategies
+	MergingStrategies map[string]MergingStrategy `yaml:"-"`
 }
 
 var ErrUnknownProperty = errors.New("unknown concept property")
@@ -48,6 +60,15 @@ func (cfg Config) ValidateProperties(props map[string]interface{}) error {
 func (cfg Config) HasField(propName string) bool {
 	_, has := cfg.Fields[propName]
 	return has
+}
+
+func (cfg Config) HasRelationship(relName string) bool {
+	for _, rel := range cfg.Relationships {
+		if rel.ConceptField == relName {
+			return true
+		}
+	}
+	return false
 }
 
 func (cfg Config) IsPropValueValid(propName string, val interface{}) bool {
@@ -108,6 +129,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	initConfig(&config)
 }
 
 func GetConfig() Config {
@@ -116,4 +139,15 @@ func GetConfig() Config {
 
 func setGlobalConfig(cfg Config) {
 	config = cfg
+	initConfig(&config)
+}
+
+func initConfig(cfg *Config) {
+	cfg.MergingStrategies = map[string]MergingStrategy{}
+	for _, rel := range cfg.Relationships {
+		if rel.Strategy == "" {
+			continue
+		}
+		cfg.MergingStrategies[rel.ConceptField] = rel.Strategy
+	}
 }
