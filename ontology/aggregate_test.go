@@ -51,8 +51,18 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	defer setGlobalConfig(backup)
 
 	cfg := backup
-	cfg.FieldToNeoProps = map[string]string{
-		"test": "test",
+	cfg.Fields = map[string]FieldConfig{
+		"test": {NeoProp: "test"},
+	}
+	cfg.Relationships = map[string]RelationshipConfig{
+		"relOverride": {
+			ConceptField: "relOverride",
+			Strategy:     OverwriteStrategy,
+		},
+		"relAggregate": {
+			ConceptField: "relAggregate",
+			Strategy:     AggregateStrategy,
+		},
 	}
 	setGlobalConfig(cfg)
 
