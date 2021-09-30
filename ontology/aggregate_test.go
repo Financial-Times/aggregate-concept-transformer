@@ -25,7 +25,8 @@ func TestCreateAggregateConcept(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			sources := readSourcesFixture(t, test.Sources)
 			expected := readAggregateFixture(t, test.Aggregate)
-			actual := CreateAggregateConcept(sources)
+			primary := sources[len(sources)-1]
+			actual := CreateAggregateConcept(primary, sources[:len(sources)-1])
 			sortAliases(&expected)
 			sortAliases(&actual)
 			if !cmp.Equal(expected, actual) {
@@ -68,7 +69,8 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 
 	sources := readSourcesFixture(t, test.Sources)
 	expected := readAggregateFixture(t, test.Aggregate)
-	actual := CreateAggregateConcept(sources)
+	primary := sources[len(sources)-1]
+	actual := CreateAggregateConcept(primary, sources[:len(sources)-1])
 	sortAliases(&expected)
 	sortAliases(&actual)
 	if !cmp.Equal(expected, actual) {
