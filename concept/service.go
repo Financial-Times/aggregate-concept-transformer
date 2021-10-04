@@ -399,20 +399,39 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 
 		}
 	}
-
+	var primaryOldConcept ontology.OldConcept
+	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		var found bool
-		var primaryConcept ontology.OldConcept
-		found, primaryConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		foundPrimary, primaryOldConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
 			return ontology.OldConcordedConcept{}, "", err
-		} else if !found {
+		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
 			return ontology.OldConcordedConcept{}, "", err
 		}
-		oldConcepts = append(oldConcepts, primaryConcept)
+	}
+
+	// transform concepts to the new format
+	if primaryOldConcept.UUID == "" {
+		// there is no primary authority concept
+		sourceCount := len(oldConcepts)
+		if sourceCount == 0 {
+			// sanity check. concordances gathering should return 404 if there are no sources.
+			// we don't return an error in order to keep the same behavior as in v1.23 of the service.
+			logger.WithTransactionID(transactionID).WithUUID(UUID).Error("no sources found")
+			return ontology.OldConcordedConcept{}, "", nil
+		}
+		// set the primary concept to the last source concept to keep the behaviour the same as in v1.23
+		primaryOldConcept = oldConcepts[sourceCount-1]
+		oldConcepts = oldConcepts[:sourceCount-1]
+	}
+
+	primaryConcept, err := primaryOldConcept.ToSourceConcept()
+	if err != nil {
+		logger.WithError(err).WithTransactionID(transactionID).WithUUID(primaryOldConcept.UUID).Error("failed to transform primary concept to new format")
+		return ontology.OldConcordedConcept{}, "", err
 	}
 
 	var sources []ontology.SourceConcept
@@ -424,7 +443,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		sources = append(sources, sourceConcept)
 	}
-	concordedConcept := ontology.CreateAggregateConcept(sources)
+	concordedConcept := ontology.CreateAggregateConcept(primaryConcept, sources)
 	oldConcorded, err := concordedConcept.ToOldConcordedConcept()
 	if err != nil {
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")

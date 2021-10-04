@@ -9,14 +9,21 @@ const (
 	ManagedLocationAuthority = "ManagedLocation"
 )
 
-func CreateAggregateConcept(sources []SourceConcept) ConcordedConcept {
+// CreateAggregateConcept creates ConcordedConcept by merging properties and relationships from primary and others SourceConcept
+// When merging the data from the primary SourceConcept takes precedent.
+// So if a property is present in both "primary" and one or more "other" SourceConcept,
+// the data from the primary will be in the ConcordedConcept
+// Exception to this rule are relationships that are with MergingStrategy: AggregateStrategy.
+// Those relationships will be collected from both primary and others SourceConcept into ConcordedConcept
+func CreateAggregateConcept(primary SourceConcept, others []SourceConcept) ConcordedConcept {
 	var scopeNoteOptions = map[string][]string{}
 	concordedConcept := ConcordedConcept{}
 	concordedConcept.Fields = map[string]interface{}{} // initialise Fields to be able to safely access it later
-	for _, src := range sources {
+	for _, src := range others {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
 
+	concordedConcept = mergeCanonicalInformation(concordedConcept, primary, scopeNoteOptions)
 	concordedConcept.Aliases = deduplicateAndSkipEmptyAliases(concordedConcept.Aliases)
 	concordedConcept.ScopeNote = chooseScopeNote(concordedConcept, scopeNoteOptions)
 	return concordedConcept
