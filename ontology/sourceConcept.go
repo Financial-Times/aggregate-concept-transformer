@@ -32,11 +32,9 @@ type AdditionalSourceFields struct {
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
 	// Membership
-	InceptionDate    string           `json:"inceptionDate,omitempty"`
 	MembershipRoles  []MembershipRole `json:"membershipRoles,omitempty"`
 	OrganisationUUID string           `json:"organisationUUID,omitempty"`
 	PersonUUID       string           `json:"personUUID,omitempty"`
-	TerminationDate  string           `json:"terminationDate,omitempty"`
 	// Organisation
 	CountryCode                  string                        `json:"countryCode,omitempty"`
 	CountryOfRisk                string                        `json:"countryOfRisk,omitempty"`

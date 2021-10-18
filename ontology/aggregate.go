@@ -192,12 +192,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	if s.PersonUUID != "" {
 		c.PersonUUID = s.PersonUUID
 	}
-	if s.InceptionDate != "" {
-		c.InceptionDate = s.InceptionDate
-	}
-	if s.TerminationDate != "" {
-		c.TerminationDate = s.TerminationDate
-	}
 	if s.FigiCode != "" {
 		c.FigiCode = s.FigiCode
 	}

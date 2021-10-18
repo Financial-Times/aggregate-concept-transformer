@@ -29,5 +29,10 @@ fields:
   birthYear:
     neoProp: "birthYear"
     type: "int"
+  # Membership
+  inceptionDate: # not stored as a concept property so no `neoProp` needed
+    type: "string"
+  terminationDate: # not stored as a concept property so no `neoProp` needed
+    type: "string"
 relationships:
 authorities:
