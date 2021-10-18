@@ -34,5 +34,24 @@ fields:
     type: "string"
   terminationDate: # not stored as a concept property so no `neoProp` needed
     type: "string"
+  # Organisation
+  countryCode:
+    neoProp: "countryCode"
+    type: "string"
+  countryOfRisk:
+    neoProp: "countryOfRisk"
+    type: "string"
+  countryOfIncorporation:
+    neoProp: "countryOfIncorporation"
+    type: "string"
+  countryOfOperations:
+    neoProp: "countryOfOperations"
+    type: "string"
+  formerNames:
+    neoProp: "formerNames"
+    type: "[]string"
+  tradeNames:
+    neoProp: "tradeNames"
+    type: "[]string"
 relationships:
 authorities:

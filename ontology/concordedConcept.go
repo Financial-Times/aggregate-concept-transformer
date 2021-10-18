@@ -34,12 +34,6 @@ type AdditionalConcordedFields struct {
 	OrganisationUUID string           `json:"organisationUUID,omitempty"`
 	PersonUUID       string           `json:"personUUID,omitempty"`
 	// Organisation
-	CountryCode                  string                        `json:"countryCode,omitempty"`
-	CountryOfRisk                string                        `json:"countryOfRisk,omitempty"`
-	CountryOfIncorporation       string                        `json:"countryOfIncorporation,omitempty"`
-	CountryOfOperations          string                        `json:"countryOfOperations,omitempty"`
-	FormerNames                  []string                      `json:"formerNames,omitempty"`
-	TradeNames                   []string                      `json:"tradeNames,omitempty"`
 	LeiCode                      string                        `json:"leiCode,omitempty"`
 	PostalCode                   string                        `json:"postalCode,omitempty"`
 	ProperName                   string                        `json:"properName,omitempty"`

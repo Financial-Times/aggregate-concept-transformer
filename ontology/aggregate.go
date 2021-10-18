@@ -140,24 +140,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	if s.ShortName != "" {
 		c.ShortName = s.ShortName
 	}
-	if len(s.TradeNames) > 0 {
-		c.TradeNames = s.TradeNames
-	}
-	if len(s.FormerNames) > 0 {
-		c.FormerNames = s.FormerNames
-	}
-	if s.CountryCode != "" {
-		c.CountryCode = s.CountryCode
-	}
-	if s.CountryOfRisk != "" {
-		c.CountryOfRisk = s.CountryOfRisk
-	}
-	if s.CountryOfIncorporation != "" {
-		c.CountryOfIncorporation = s.CountryOfIncorporation
-	}
-	if s.CountryOfOperations != "" {
-		c.CountryOfOperations = s.CountryOfOperations
-	}
 	if s.PostalCode != "" {
 		c.PostalCode = s.PostalCode
 	}

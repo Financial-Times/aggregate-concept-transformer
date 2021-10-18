@@ -36,15 +36,9 @@ type AdditionalSourceFields struct {
 	OrganisationUUID string           `json:"organisationUUID,omitempty"`
 	PersonUUID       string           `json:"personUUID,omitempty"`
 	// Organisation
-	CountryCode                  string                        `json:"countryCode,omitempty"`
-	CountryOfRisk                string                        `json:"countryOfRisk,omitempty"`
-	CountryOfIncorporation       string                        `json:"countryOfIncorporation,omitempty"`
-	CountryOfOperations          string                        `json:"countryOfOperations,omitempty"`
 	CountryOfRiskUUID            string                        `json:"countryOfRiskUUID,omitempty"`
 	CountryOfIncorporationUUID   string                        `json:"countryOfIncorporationUUID,omitempty"`
 	CountryOfOperationsUUID      string                        `json:"countryOfOperationsUUID,omitempty"`
-	FormerNames                  []string                      `json:"formerNames,omitempty"`
-	TradeNames                   []string                      `json:"tradeNames,omitempty"`
 	LeiCode                      string                        `json:"leiCode,omitempty"`
 	ParentOrganisation           string                        `json:"parentOrganisation,omitempty"`
 	PostalCode                   string                        `json:"postalCode,omitempty"`
