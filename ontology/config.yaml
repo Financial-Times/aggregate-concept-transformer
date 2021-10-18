@@ -15,5 +15,19 @@ fields:
   twitterHandle:
     neoProp: "twitterHandle"
     type: "string"
+  shortLabel:
+    neoProp: "shortLabel"
+    type: "string"
+  # Brand
+  strapline:
+    neoProp: "strapline"
+    type: "string"
+  # Person
+  salutation:
+    neoProp: "salutation"
+    type: "string"
+  birthYear:
+    neoProp: "birthYear"
+    type: "int"
 relationships:
 authorities:

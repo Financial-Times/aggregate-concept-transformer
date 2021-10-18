@@ -26,12 +26,6 @@ type AdditionalConcordedFields struct {
 	RelatedUUIDs      []string `json:"relatedUUIDs,omitempty"`
 	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
 	ScopeNote         string   `json:"scopeNote,omitempty"`
-	ShortLabel        string   `json:"shortLabel,omitempty"`
-	// Brand
-	Strapline string `json:"strapline,omitempty"`
-	// Person
-	Salutation string `json:"salutation,omitempty"`
-	BirthYear  int    `json:"birthYear,omitempty"`
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`

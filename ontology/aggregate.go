@@ -120,13 +120,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 		}
 	}
 
-	if s.Strapline != "" {
-		c.Strapline = s.Strapline
-	}
 	buildScopeNoteOptions(scopeNoteOptions, s)
-	if s.ShortLabel != "" {
-		c.ShortLabel = s.ShortLabel
-	}
 	if len(s.SupersededByUUIDs) > 0 {
 		c.SupersededByUUIDs = s.SupersededByUUIDs
 	}
@@ -172,12 +166,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	}
 	if s.LeiCode != "" {
 		c.LeiCode = s.LeiCode
-	}
-	if s.BirthYear > 0 {
-		c.BirthYear = s.BirthYear
-	}
-	if s.Salutation != "" {
-		c.Salutation = s.Salutation
 	}
 	if s.ISO31661 != "" {
 		c.ISO31661 = s.ISO31661
