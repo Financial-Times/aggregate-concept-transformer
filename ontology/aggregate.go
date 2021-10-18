@@ -123,18 +123,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	if s.Strapline != "" {
 		c.Strapline = s.Strapline
 	}
-	if s.ImageURL != "" {
-		c.ImageURL = s.ImageURL
-	}
-	if s.EmailAddress != "" {
-		c.EmailAddress = s.EmailAddress
-	}
-	if s.FacebookPage != "" {
-		c.FacebookPage = s.FacebookPage
-	}
-	if s.TwitterHandle != "" {
-		c.TwitterHandle = s.TwitterHandle
-	}
 	buildScopeNoteOptions(scopeNoteOptions, s)
 	if s.ShortLabel != "" {
 		c.ShortLabel = s.ShortLabel

@@ -25,10 +25,6 @@ type AdditionalConcordedFields struct {
 	BroaderUUIDs      []string `json:"broaderUUIDs,omitempty"`
 	RelatedUUIDs      []string `json:"relatedUUIDs,omitempty"`
 	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
-	ImageURL          string   `json:"_imageUrl,omitempty"`
-	EmailAddress      string   `json:"emailAddress,omitempty"`
-	FacebookPage      string   `json:"facebookPage,omitempty"`
-	TwitterHandle     string   `json:"twitterHandle,omitempty"`
 	ScopeNote         string   `json:"scopeNote,omitempty"`
 	ShortLabel        string   `json:"shortLabel,omitempty"`
 	// Brand

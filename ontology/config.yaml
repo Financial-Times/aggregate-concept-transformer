@@ -3,5 +3,17 @@ fields:
   descriptionXML:
     neoProp: "descriptionXML"
     type: "string"
+  _imageUrl:
+    neoProp: "imageUrl"
+    type: "string"
+  emailAddress:
+    neoProp: "emailAddress"
+    type: "string"
+  facebookPage:
+    neoProp: "facebookPage"
+    type: "string"
+  twitterHandle:
+    neoProp: "twitterHandle"
+    type: "string"
 relationships:
 authorities:

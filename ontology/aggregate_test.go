@@ -45,11 +45,19 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 		"Properties": {
 			Primary: SourceConcept{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
 				"descriptionXML": "primary description",
+				"_imageUrl":      "primary image",
+				"emailAddress":   "primary emailAddress",
+				"facebookPage":   "primary facebookPage",
+				"twitterHandle":  "primary twitterHandle",
 			}},
 			},
 			Sources: []SourceConcept{
 				{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
 					"descriptionXML": "secondary description",
+					"_imageUrl":      "secondary image",
+					"emailAddress":   "secondary emailAddress",
+					"facebookPage":   "secondary facebookPage",
+					"twitterHandle":  "secondary twitterHandle",
 				}}},
 			},
 		},

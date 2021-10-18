@@ -27,10 +27,6 @@ type AdditionalSourceFields struct {
 	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
 	ImpliedByUUIDs    []string `json:"impliedByUUIDs,omitempty"`
 	HasFocusUUIDs     []string `json:"hasFocusUUIDs,omitempty"`
-	ImageURL          string   `json:"_imageUrl,omitempty"`
-	EmailAddress      string   `json:"emailAddress,omitempty"`
-	FacebookPage      string   `json:"facebookPage,omitempty"`
-	TwitterHandle     string   `json:"twitterHandle,omitempty"`
 	ScopeNote         string   `json:"scopeNote,omitempty"`
 	ShortLabel        string   `json:"shortLabel,omitempty"`
 	// Brand
