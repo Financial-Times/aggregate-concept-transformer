@@ -34,17 +34,8 @@ type AdditionalConcordedFields struct {
 	OrganisationUUID string           `json:"organisationUUID,omitempty"`
 	PersonUUID       string           `json:"personUUID,omitempty"`
 	// Organisation
-	LeiCode                      string                        `json:"leiCode,omitempty"`
-	PostalCode                   string                        `json:"postalCode,omitempty"`
-	ProperName                   string                        `json:"properName,omitempty"`
-	ShortName                    string                        `json:"shortName,omitempty"`
-	YearFounded                  int                           `json:"yearFounded,omitempty"`
 	IsDeprecated                 bool                          `json:"isDeprecated,omitempty"`
 	NAICSIndustryClassifications []NAICSIndustryClassification `json:"naicsIndustryClassifications,omitempty"`
-	// Location
-	ISO31661 string `json:"iso31661,omitempty"`
-	// IndustryClassification
-	IndustryIdentifier string `json:"industryIdentifier,omitempty"`
 	// Source representations
 	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }

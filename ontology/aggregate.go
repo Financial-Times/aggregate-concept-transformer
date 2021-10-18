@@ -134,24 +134,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 		c.RelatedUUIDs = s.RelatedUUIDs
 	}
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
-	if s.ProperName != "" {
-		c.ProperName = s.ProperName
-	}
-	if s.ShortName != "" {
-		c.ShortName = s.ShortName
-	}
-	if s.PostalCode != "" {
-		c.PostalCode = s.PostalCode
-	}
-	if s.YearFounded > 0 {
-		c.YearFounded = s.YearFounded
-	}
-	if s.LeiCode != "" {
-		c.LeiCode = s.LeiCode
-	}
-	if s.ISO31661 != "" {
-		c.ISO31661 = s.ISO31661
-	}
 
 	for _, mr := range s.MembershipRoles {
 		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
@@ -179,9 +161,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	}
 	if s.IssuedBy != "" {
 		c.IssuedBy = s.IssuedBy
-	}
-	if s.IndustryIdentifier != "" {
-		c.IndustryIdentifier = s.IndustryIdentifier
 	}
 	c.IsDeprecated = s.IsDeprecated
 	return c

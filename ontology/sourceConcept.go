@@ -39,18 +39,9 @@ type AdditionalSourceFields struct {
 	CountryOfRiskUUID            string                        `json:"countryOfRiskUUID,omitempty"`
 	CountryOfIncorporationUUID   string                        `json:"countryOfIncorporationUUID,omitempty"`
 	CountryOfOperationsUUID      string                        `json:"countryOfOperationsUUID,omitempty"`
-	LeiCode                      string                        `json:"leiCode,omitempty"`
 	ParentOrganisation           string                        `json:"parentOrganisation,omitempty"`
-	PostalCode                   string                        `json:"postalCode,omitempty"`
-	ProperName                   string                        `json:"properName,omitempty"`
-	ShortName                    string                        `json:"shortName,omitempty"`
-	YearFounded                  int                           `json:"yearFounded,omitempty"`
 	IsDeprecated                 bool                          `json:"isDeprecated,omitempty"`
 	NAICSIndustryClassifications []NAICSIndustryClassification `json:"naicsIndustryClassifications,omitempty"`
-	// Location
-	ISO31661 string `json:"iso31661,omitempty"`
-	// IndustryClassification
-	IndustryIdentifier string `json:"industryIdentifier,omitempty"`
 }
 
 func (sc *SourceConcept) MarshalJSON() ([]byte, error) {

@@ -53,5 +53,28 @@ fields:
   tradeNames:
     neoProp: "tradeNames"
     type: "[]string"
+  leiCode:
+    neoProp: "leiCode"
+    type: "string"
+  postalCode:
+    neoProp: "postalCode"
+    type: "string"
+  properName:
+    neoProp: "properName"
+    type: "string"
+  shortName:
+    neoProp: "shortName"
+    type: "string"
+  yearFounded:
+    neoProp: "yearFounded"
+    type: "int"
+  # Location
+  iso31661:
+    neoProp: "iso31661"
+    type: "string"
+  # IndustryClassification
+  industryIdentifier:
+    neoProp: "industryIdentifier"
+    type: "string"
 relationships:
 authorities:
