@@ -25,7 +25,6 @@ type AdditionalConcordedFields struct {
 	BroaderUUIDs      []string `json:"broaderUUIDs,omitempty"`
 	RelatedUUIDs      []string `json:"relatedUUIDs,omitempty"`
 	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
-	DescriptionXML    string   `json:"descriptionXML,omitempty"`
 	ImageURL          string   `json:"_imageUrl,omitempty"`
 	EmailAddress      string   `json:"emailAddress,omitempty"`
 	FacebookPage      string   `json:"facebookPage,omitempty"`

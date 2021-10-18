@@ -37,6 +37,43 @@ func TestCreateAggregateConcept(t *testing.T) {
 	}
 }
 
+func TestCreateAggregateConcept_Properties(t *testing.T) {
+	tests := map[string]struct {
+		Primary SourceConcept
+		Sources []SourceConcept
+	}{
+		"Properties": {
+			Primary: SourceConcept{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+				"descriptionXML": "primary description",
+			}},
+			},
+			Sources: []SourceConcept{
+				{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+					"descriptionXML": "secondary description",
+				}}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := CreateAggregateConcept(test.Primary, test.Sources)
+			sources := test.Sources
+			sources = append(sources, test.Primary)
+			expected := ConcordedConcept{
+				AdditionalConcordedFields: AdditionalConcordedFields{
+					Fields:                test.Primary.Fields,
+					SourceRepresentations: sources,
+				},
+			}
+			if !cmp.Equal(expected, actual) {
+				diff := cmp.Diff(expected, actual)
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
 func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	// WARNING: don't run this test parallel with others. It changes the global config.
 	test := struct {

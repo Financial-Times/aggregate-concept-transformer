@@ -1,3 +1,7 @@
 fields:
+  # General
+  descriptionXML:
+    neoProp: "descriptionXML"
+    type: "string"
 relationships:
 authorities:

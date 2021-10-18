@@ -123,9 +123,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	if s.Strapline != "" {
 		c.Strapline = s.Strapline
 	}
-	if s.DescriptionXML != "" {
-		c.DescriptionXML = s.DescriptionXML
-	}
 	if s.ImageURL != "" {
 		c.ImageURL = s.ImageURL
 	}
