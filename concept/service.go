@@ -18,15 +18,14 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
 const (
-	smartlogicAuthority      = "Smartlogic"
-	managedLocationAuthority = "ManagedLocation"
-	thingsAPIEndpoint        = "/things"
-	conceptsAPIEnpoint       = "/concepts"
+	thingsAPIEndpoint  = "/things"
+	conceptsAPIEnpoint = "/concepts"
 )
 
 var irregularConceptTypePaths = map[string]string{
@@ -41,7 +40,7 @@ var irregularConceptTypePaths = map[string]string{
 type Service interface {
 	ListenForNotifications(ctx context.Context, workerID int)
 	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error)
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error)
 	Healthchecks() []fthealth.Check
 }
 
@@ -310,19 +309,19 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 
 	var primaryAuthority string
 	var err error
-	slRecords, slFound := bucketedConcordances[smartlogicAuthority]
+	slRecords, slFound := bucketedConcordances[ontology.SmartlogicAuthority]
 	if slFound {
 		if len(slRecords) == 1 {
-			primaryAuthority = smartlogicAuthority
+			primaryAuthority = ontology.SmartlogicAuthority
 		} else {
 			err = fmt.Errorf("more than 1 primary authority")
 		}
 	}
-	mlRecords, mlFound := bucketedConcordances[managedLocationAuthority]
+	mlRecords, mlFound := bucketedConcordances[ontology.ManagedLocationAuthority]
 	if mlFound {
 		if len(mlRecords) == 1 {
 			if primaryAuthority == "" {
-				primaryAuthority = managedLocationAuthority
+				primaryAuthority = ontology.ManagedLocationAuthority
 			}
 		} else {
 			err = fmt.Errorf("more than 1 ManagedLocation primary authority")
@@ -338,10 +337,9 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error) {
-
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
 	type concordedData struct {
-		Concept       ConcordedConcept
+		Concept       ontology.OldConcordedConcept
 		TransactionID string
 		Err           error
 	}
@@ -355,25 +353,25 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	case data := <-ch:
 		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return ConcordedConcept{}, "", ctx.Err()
+		return ontology.OldConcordedConcept{}, "", ctx.Err()
 	}
 }
 
-func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ConcordedConcept, string, error) {
-	var scopeNoteOptions = map[string][]string{}
+// nolint: gocognit // TODO: fix 'cognitive complexity 21 of func `(*AggregateService).getConcordedConcept` is high (> 20) (gocognit)'
+func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
 	var transactionID string
 	var err error
-	concordedConcept := ConcordedConcept{}
+	oldConcepts := []ontology.OldConcept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
-		return ConcordedConcept{}, "", err
+		return ontology.OldConcordedConcept{}, "", err
 	}
 	logger.WithField("UUID", UUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
-		return ConcordedConcept{}, "", err
+		return ontology.OldConcordedConcept{}, "", err
 	}
 
 	// Get all concepts from S3
@@ -383,10 +381,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept s3.Concept
+			var sourceConcept ontology.OldConcept
 			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
-				return ConcordedConcept{}, "", err
+				return ontology.OldConcordedConcept{}, "", err
 			}
 
 			if !found {
@@ -397,54 +395,62 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 				sourceConcept.UUID = conc.UUID
 				sourceConcept.Type = "Thing"
 			}
+			oldConcepts = append(oldConcepts, sourceConcept)
 
-			concordedConcept = mergeCanonicalInformation(concordedConcept, sourceConcept, scopeNoteOptions)
 		}
 	}
-
+	var primaryOldConcept ontology.OldConcept
+	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		var found bool
-		var primaryConcept s3.Concept
-		found, primaryConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		foundPrimary, primaryOldConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
-			return ConcordedConcept{}, "", err
-		} else if !found {
+			return ontology.OldConcordedConcept{}, "", err
+		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
-			return ConcordedConcept{}, "", err
-		}
-		concordedConcept = mergeCanonicalInformation(concordedConcept, primaryConcept, scopeNoteOptions)
-	}
-	concordedConcept.Aliases = deduplicateAndSkipEmptyAliases(concordedConcept.Aliases)
-	concordedConcept.ScopeNote = chooseScopeNote(concordedConcept, scopeNoteOptions)
-
-	return concordedConcept, transactionID, nil
-}
-
-func chooseScopeNote(concept ConcordedConcept, scopeNoteOptions map[string][]string) string {
-	if sn, ok := scopeNoteOptions[smartlogicAuthority]; ok {
-		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
-	}
-	if sn, ok := scopeNoteOptions["Wikidata"]; ok {
-		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
-	}
-	if sn, ok := scopeNoteOptions["TME"]; ok {
-		if concept.Type == "Location" {
-			return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
+			return ontology.OldConcordedConcept{}, "", err
 		}
 	}
-	return ""
-}
 
-func removeMatchingEntries(slice []string, matcher string) []string {
-	var newSlice []string
-	for _, k := range slice {
-		if k != matcher {
-			newSlice = append(newSlice, k)
+	// transform concepts to the new format
+	if primaryOldConcept.UUID == "" {
+		// there is no primary authority concept
+		sourceCount := len(oldConcepts)
+		if sourceCount == 0 {
+			// sanity check. concordances gathering should return 404 if there are no sources.
+			// we don't return an error in order to keep the same behavior as in v1.23 of the service.
+			logger.WithTransactionID(transactionID).WithUUID(UUID).Error("no sources found")
+			return ontology.OldConcordedConcept{}, "", nil
 		}
+		// set the primary concept to the last source concept to keep the behaviour the same as in v1.23
+		primaryOldConcept = oldConcepts[sourceCount-1]
+		oldConcepts = oldConcepts[:sourceCount-1]
 	}
-	return newSlice
+
+	primaryConcept, err := primaryOldConcept.ToSourceConcept()
+	if err != nil {
+		logger.WithError(err).WithTransactionID(transactionID).WithUUID(primaryOldConcept.UUID).Error("failed to transform primary concept to new format")
+		return ontology.OldConcordedConcept{}, "", err
+	}
+
+	var sources []ontology.SourceConcept
+	for _, old := range oldConcepts {
+		sourceConcept, err := old.ToSourceConcept() //nolint: govet // we don't care that err is shadow
+		if err != nil {
+			logger.WithError(err).WithTransactionID(transactionID).WithUUID(old.UUID).Error("failed to transform concept to new format")
+			return ontology.OldConcordedConcept{}, "", err
+		}
+		sources = append(sources, sourceConcept)
+	}
+	concordedConcept := ontology.CreateAggregateConcept(primaryConcept, sources)
+	oldConcorded, err := concordedConcept.ToOldConcordedConcept()
+	if err != nil {
+		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")
+		return ontology.OldConcordedConcept{}, "", err
+	}
+
+	return oldConcorded, transactionID, nil
 }
 
 func (s *AggregateService) Healthchecks() []fthealth.Check {
@@ -460,171 +466,6 @@ func (s *AggregateService) Healthchecks() []fthealth.Check {
 		checks = append(checks, s.kinesis.Healthcheck())
 	}
 	return checks
-}
-
-func deduplicateAndSkipEmptyAliases(aliases []string) []string {
-	aMap := map[string]bool{}
-	var outAliases []string
-	for _, v := range aliases {
-		if v == "" {
-			continue
-		}
-		aMap[v] = true
-	}
-	for a := range aMap {
-		outAliases = append(outAliases, a)
-	}
-	return outAliases
-}
-
-func getMoreSpecificType(existingType string, newType string) string {
-
-	// Thing type shouldn't wipe things.
-	if newType == "Thing" && existingType != "" {
-		return existingType
-	}
-
-	// If we've already called it a PublicCompany, keep that information.
-	if existingType == "PublicCompany" && (newType == "Organisation" || newType == "Company") {
-		return existingType
-	}
-	return newType
-}
-
-func buildScopeNoteOptions(scopeNotes map[string][]string, s s3.Concept) {
-	var newScopeNote string
-	if s.Authority == "TME" {
-		newScopeNote = s.PrefLabel
-	} else {
-		newScopeNote = s.ScopeNote
-	}
-	if newScopeNote != "" {
-		scopeNotes[s.Authority] = append(scopeNotes[s.Authority], newScopeNote)
-	}
-}
-
-func mergeCanonicalInformation(c ConcordedConcept, s s3.Concept, scopeNoteOptions map[string][]string) ConcordedConcept {
-	c.PrefUUID = s.UUID
-	c.PrefLabel = s.PrefLabel
-	c.Type = getMoreSpecificType(c.Type, s.Type)
-	c.Aliases = append(c.Aliases, s.Aliases...)
-	c.Aliases = append(c.Aliases, s.PrefLabel)
-	if s.Strapline != "" {
-		c.Strapline = s.Strapline
-	}
-	if s.DescriptionXML != "" {
-		c.DescriptionXML = s.DescriptionXML
-	}
-	if s.ImageURL != "" {
-		c.ImageURL = s.ImageURL
-	}
-	if s.EmailAddress != "" {
-		c.EmailAddress = s.EmailAddress
-	}
-	if s.FacebookPage != "" {
-		c.FacebookPage = s.FacebookPage
-	}
-	if s.TwitterHandle != "" {
-		c.TwitterHandle = s.TwitterHandle
-	}
-	buildScopeNoteOptions(scopeNoteOptions, s)
-	if s.ShortLabel != "" {
-		c.ShortLabel = s.ShortLabel
-	}
-	if len(s.SupersededByUUIDs) > 0 {
-		c.SupersededByUUIDs = s.SupersededByUUIDs
-	}
-	if len(s.ParentUUIDs) > 0 {
-		c.ParentUUIDs = s.ParentUUIDs
-	}
-	if len(s.BroaderUUIDs) > 0 {
-		c.BroaderUUIDs = s.BroaderUUIDs
-	}
-	if len(s.RelatedUUIDs) > 0 {
-		c.RelatedUUIDs = s.RelatedUUIDs
-	}
-	c.SourceRepresentations = append(c.SourceRepresentations, s)
-	if s.ProperName != "" {
-		c.ProperName = s.ProperName
-	}
-	if s.ShortName != "" {
-		c.ShortName = s.ShortName
-	}
-	if len(s.TradeNames) > 0 {
-		c.TradeNames = s.TradeNames
-	}
-	if len(s.FormerNames) > 0 {
-		c.FormerNames = s.FormerNames
-	}
-	if s.CountryCode != "" {
-		c.CountryCode = s.CountryCode
-	}
-	if s.CountryOfRisk != "" {
-		c.CountryOfRisk = s.CountryOfRisk
-	}
-	if s.CountryOfIncorporation != "" {
-		c.CountryOfIncorporation = s.CountryOfIncorporation
-	}
-	if s.CountryOfOperations != "" {
-		c.CountryOfOperations = s.CountryOfOperations
-	}
-	if s.PostalCode != "" {
-		c.PostalCode = s.PostalCode
-	}
-	if s.YearFounded > 0 {
-		c.YearFounded = s.YearFounded
-	}
-	if s.LeiCode != "" {
-		c.LeiCode = s.LeiCode
-	}
-	if s.BirthYear > 0 {
-		c.BirthYear = s.BirthYear
-	}
-	if s.Salutation != "" {
-		c.Salutation = s.Salutation
-	}
-	if s.ISO31661 != "" {
-		c.ISO31661 = s.ISO31661
-	}
-
-	for _, mr := range s.MembershipRoles {
-		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
-			RoleUUID:        mr.RoleUUID,
-			InceptionDate:   mr.InceptionDate,
-			TerminationDate: mr.TerminationDate,
-		})
-	}
-
-	for _, ic := range s.NAICSIndustryClassifications {
-		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, NAICSIndustryClassification{
-			UUID: ic.UUID,
-			Rank: ic.Rank,
-		})
-	}
-
-	if s.OrganisationUUID != "" {
-		c.OrganisationUUID = s.OrganisationUUID
-	}
-	if s.PersonUUID != "" {
-		c.PersonUUID = s.PersonUUID
-	}
-	if s.InceptionDate != "" {
-		c.InceptionDate = s.InceptionDate
-	}
-	if s.TerminationDate != "" {
-		c.TerminationDate = s.TerminationDate
-	}
-	if s.FigiCode != "" {
-		c.FigiCode = s.FigiCode
-	}
-	if s.IssuedBy != "" {
-		c.IssuedBy = s.IssuedBy
-	}
-	if s.IndustryIdentifier != "" {
-		c.IndustryIdentifier = s.IndustryIdentifier
-	}
-	c.IsDeprecated = s.IsDeprecated
-	return c
 }
 
 func sendToPurger(ctx context.Context, client httpClient, baseURL string, conceptUUIDs []string, conceptType string, conceptTypesWithPublicEndpoints []string, tid string) error {
@@ -673,8 +514,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ConcordedConcept, tid string) (sqs.ConceptChanges, error) {
-
+func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.OldConcordedConcept, tid string) (sqs.ConceptChanges, error) {
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
@@ -825,7 +665,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept ConcordedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept ontology.OldConcordedConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false
@@ -836,7 +676,7 @@ func isTypeAllowedInElastic(concordedConcept ConcordedConcept) bool {
 	case "Membership":
 		for _, sr := range concordedConcept.SourceRepresentations {
 			//Allow smartlogic curated memberships through to elasticsearch as we will use them to discover authors
-			if sr.Authority == "Smartlogic" {
+			if sr.Authority == ontology.SmartlogicAuthority {
 				return true
 			}
 		}

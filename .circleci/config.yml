@@ -19,3 +19,6 @@ workflows:
       - ft-golang-ci/scan:
           name: scan-dependencies
           context: cm-team-snyk
+          executor-name:
+            name: ft-golang-ci/scanner
+            circleci-golang-image-version: "1.16"
