@@ -120,28 +120,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 		}
 	}
 
-	if s.Strapline != "" {
-		c.Strapline = s.Strapline
-	}
-	if s.DescriptionXML != "" {
-		c.DescriptionXML = s.DescriptionXML
-	}
-	if s.ImageURL != "" {
-		c.ImageURL = s.ImageURL
-	}
-	if s.EmailAddress != "" {
-		c.EmailAddress = s.EmailAddress
-	}
-	if s.FacebookPage != "" {
-		c.FacebookPage = s.FacebookPage
-	}
-	if s.TwitterHandle != "" {
-		c.TwitterHandle = s.TwitterHandle
-	}
 	buildScopeNoteOptions(scopeNoteOptions, s)
-	if s.ShortLabel != "" {
-		c.ShortLabel = s.ShortLabel
-	}
 	if len(s.SupersededByUUIDs) > 0 {
 		c.SupersededByUUIDs = s.SupersededByUUIDs
 	}
@@ -155,48 +134,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 		c.RelatedUUIDs = s.RelatedUUIDs
 	}
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
-	if s.ProperName != "" {
-		c.ProperName = s.ProperName
-	}
-	if s.ShortName != "" {
-		c.ShortName = s.ShortName
-	}
-	if len(s.TradeNames) > 0 {
-		c.TradeNames = s.TradeNames
-	}
-	if len(s.FormerNames) > 0 {
-		c.FormerNames = s.FormerNames
-	}
-	if s.CountryCode != "" {
-		c.CountryCode = s.CountryCode
-	}
-	if s.CountryOfRisk != "" {
-		c.CountryOfRisk = s.CountryOfRisk
-	}
-	if s.CountryOfIncorporation != "" {
-		c.CountryOfIncorporation = s.CountryOfIncorporation
-	}
-	if s.CountryOfOperations != "" {
-		c.CountryOfOperations = s.CountryOfOperations
-	}
-	if s.PostalCode != "" {
-		c.PostalCode = s.PostalCode
-	}
-	if s.YearFounded > 0 {
-		c.YearFounded = s.YearFounded
-	}
-	if s.LeiCode != "" {
-		c.LeiCode = s.LeiCode
-	}
-	if s.BirthYear > 0 {
-		c.BirthYear = s.BirthYear
-	}
-	if s.Salutation != "" {
-		c.Salutation = s.Salutation
-	}
-	if s.ISO31661 != "" {
-		c.ISO31661 = s.ISO31661
-	}
 
 	for _, mr := range s.MembershipRoles {
 		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
@@ -219,20 +156,11 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	if s.PersonUUID != "" {
 		c.PersonUUID = s.PersonUUID
 	}
-	if s.InceptionDate != "" {
-		c.InceptionDate = s.InceptionDate
-	}
-	if s.TerminationDate != "" {
-		c.TerminationDate = s.TerminationDate
-	}
 	if s.FigiCode != "" {
 		c.FigiCode = s.FigiCode
 	}
 	if s.IssuedBy != "" {
 		c.IssuedBy = s.IssuedBy
-	}
-	if s.IndustryIdentifier != "" {
-		c.IndustryIdentifier = s.IndustryIdentifier
 	}
 	c.IsDeprecated = s.IsDeprecated
 	return c

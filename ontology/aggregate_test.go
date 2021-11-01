@@ -37,6 +37,89 @@ func TestCreateAggregateConcept(t *testing.T) {
 	}
 }
 
+func TestCreateAggregateConcept_Properties(t *testing.T) {
+	tests := map[string]struct {
+		Primary SourceConcept
+		Sources []SourceConcept
+	}{
+		"Properties": {
+			Primary: SourceConcept{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+				"descriptionXML":         "primary description",
+				"_imageUrl":              "primary image",
+				"emailAddress":           "primary emailAddress",
+				"facebookPage":           "primary facebookPage",
+				"twitterHandle":          "primary twitterHandle",
+				"shortLabel":             "primary shortLabel",
+				"strapline":              "primary strapline",
+				"salutation":             "primary salutation",
+				"birthYear":              1,
+				"inceptionDate":          "primary inceptionDate",
+				"terminationDate":        "primary terminationDate",
+				"countryCode":            "primary countryCode",
+				"countryOfRisk":          "primary countryOfRisk",
+				"countryOfIncorporation": "primary countryOfIncorporation",
+				"countryOfOperations":    "primary countryOfOperations",
+				"formerNames":            []string{"primary formerNames"},
+				"tradeNames":             []string{"primary tradeNames"},
+				"leiCode":                "primary leiCode",
+				"postalCode":             "primary postalCode",
+				"properName":             "primary properName",
+				"shortName":              "primary shortName",
+				"yearFounded":            1,
+				"iso31661":               "primary iso31661",
+				"industryIdentifier":     "primary industryIdentifier",
+			}},
+			},
+			Sources: []SourceConcept{
+				{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+					"descriptionXML":         "secondary description",
+					"_imageUrl":              "secondary image",
+					"emailAddress":           "secondary emailAddress",
+					"facebookPage":           "secondary facebookPage",
+					"twitterHandle":          "secondary twitterHandle",
+					"shortLabel":             "secondary shortLabel",
+					"strapline":              "secondary strapline",
+					"salutation":             "secondary salutation",
+					"birthYear":              2,
+					"inceptionDate":          "secondary inceptionDate",
+					"terminationDate":        "secondary terminationDate",
+					"countryCode":            "secondary countryCode",
+					"countryOfRisk":          "secondary countryOfRisk",
+					"countryOfIncorporation": "secondary countryOfIncorporation",
+					"countryOfOperations":    "secondary countryOfOperations",
+					"formerNames":            []string{"secondary formerNames"},
+					"tradeNames":             []string{"secondary tradeNames"},
+					"leiCode":                "secondary leiCode",
+					"postalCode":             "secondary postalCode",
+					"properName":             "secondary properName",
+					"shortName":              "secondary shortName",
+					"yearFounded":            2,
+					"iso31661":               "secondary iso31661",
+					"industryIdentifier":     "secondary industryIdentifier",
+				}}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := CreateAggregateConcept(test.Primary, test.Sources)
+			sources := test.Sources
+			sources = append(sources, test.Primary)
+			expected := ConcordedConcept{
+				AdditionalConcordedFields: AdditionalConcordedFields{
+					Fields:                test.Primary.Fields,
+					SourceRepresentations: sources,
+				},
+			}
+			if !cmp.Equal(expected, actual) {
+				diff := cmp.Diff(expected, actual)
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
 func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	// WARNING: don't run this test parallel with others. It changes the global config.
 	test := struct {
