@@ -20,19 +20,13 @@ type RequiredSourceFields struct {
 type AdditionalSourceFields struct {
 	Fields map[string]interface{} `json:"-"`
 	// Additional fields
-	Aliases        []string `json:"aliases,omitempty"`
-	ImpliedByUUIDs []string `json:"impliedByUUIDs,omitempty"`
-	HasFocusUUIDs  []string `json:"hasFocusUUIDs,omitempty"`
-	ScopeNote      string   `json:"scopeNote,omitempty"`
+	Aliases   []string `json:"aliases,omitempty"`
+	ScopeNote string   `json:"scopeNote,omitempty"`
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
 	// Organisation
-	CountryOfRiskUUID          string `json:"countryOfRiskUUID,omitempty"`
-	CountryOfIncorporationUUID string `json:"countryOfIncorporationUUID,omitempty"`
-	CountryOfOperationsUUID    string `json:"countryOfOperationsUUID,omitempty"`
-	ParentOrganisation         string `json:"parentOrganisation,omitempty"`
-	IsDeprecated               bool   `json:"isDeprecated,omitempty"`
+	IsDeprecated bool `json:"isDeprecated,omitempty"`
 }
 
 func (sc *SourceConcept) MarshalJSON() ([]byte, error) {

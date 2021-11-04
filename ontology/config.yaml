@@ -90,6 +90,10 @@ relationships:
   SUPERSEDED_BY:
     conceptField: "supersededByUUIDs"
     mergingStrategy: "overwrite"
+  IMPLIED_BY:
+    conceptField: "impliedByUUIDs"
+  HAS_FOCUS:
+    conceptField: "hasFocusUUIDs"
   # Membership
   HAS_ORGANISATION:
     conceptField: "organisationUUID"
@@ -105,6 +109,22 @@ relationships:
     conceptField: "membershipRoles"
     mergingStrategy: "aggregate"
   # Organisation
+  COUNTRY_OF_RISK:
+    conceptField: "countryOfRiskUUID"
+    oneToOne: true
+    neoCreate: true
+  COUNTRY_OF_INCORPORATION:
+    conceptField: "countryOfIncorporationUUID"
+    oneToOne: true
+    neoCreate: true
+  COUNTRY_OF_OPERATIONS:
+    conceptField: "countryOfOperationsUUID"
+    oneToOne: true
+    neoCreate: true
+  SUB_ORGANISATION_OF:
+    conceptField: "parentOrganisation"
+    oneToOne: true
+    neoCreate: true
   HAS_INDUSTRY_CLASSIFICATION:
     conceptField: "naicsIndustryClassifications"
     mergingStrategy: "aggregate"
