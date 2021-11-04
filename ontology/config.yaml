@@ -101,4 +101,11 @@ relationships:
     oneToOne: true
     neoCreate: true
     mergingStrategy: "overwrite"
+  HAS_ROLE: # NB: currently not in concepts-rw-neo4j
+    conceptField: "membershipRoles"
+    mergingStrategy: "aggregate"
+  # Organisation
+  HAS_INDUSTRY_CLASSIFICATION:
+    conceptField: "naicsIndustryClassifications"
+    mergingStrategy: "aggregate"
 authorities:

@@ -1,0 +1,62 @@
+{
+  "prefUUID": "primary source uuid",
+  "naicsIndustryClassifications": [
+    {
+      "uuid": "two",
+      "rank": 1
+    },
+    {
+      "uuid": "one",
+      "rank": 1
+    }
+  ],
+  "membershipRoles": [
+    {
+      "membershipRoleUUID": "f807193d-337b-412f-b32c-afa14b385819",
+      "inceptionDate": "2016-01-01T00:00:00Z",
+      "terminationDate": "2017-02-02T00:00:00Z"
+    },
+    {
+      "membershipRoleUUID": "f807193d-337b-412f-b32c-afa14b385819",
+      "inceptionDate": "2016-01-01T00:00:00Z",
+      "terminationDate": "2017-02-02T00:00:00Z"
+    }
+  ],
+  "sourceRepresentations": [
+    {
+      "uuid": "third source uuid",
+      "naicsIndustryClassifications": [
+        {
+          "uuid": "two",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "uuid": "second source uuid",
+      "naicsIndustryClassifications": [
+        {
+          "uuid": "one",
+          "rank": 1
+        }
+      ],
+      "membershipRoles": [
+        {
+          "membershipRoleUUID": "f807193d-337b-412f-b32c-afa14b385819",
+          "inceptionDate": "2016-01-01T00:00:00Z",
+          "terminationDate": "2017-02-02T00:00:00Z"
+        }
+      ]
+    },
+    {
+      "uuid": "primary source uuid",
+      "membershipRoles": [
+        {
+          "membershipRoleUUID": "f807193d-337b-412f-b32c-afa14b385819",
+          "inceptionDate": "2016-01-01T00:00:00Z",
+          "terminationDate": "2017-02-02T00:00:00Z"
+        }
+      ]
+    }
+  ]
+}

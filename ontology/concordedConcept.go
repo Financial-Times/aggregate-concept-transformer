@@ -25,11 +25,8 @@ type AdditionalConcordedFields struct {
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
-	// Membership
-	MembershipRoles []MembershipRole `json:"membershipRoles,omitempty"`
 	// Organisation
-	IsDeprecated                 bool                          `json:"isDeprecated,omitempty"`
-	NAICSIndustryClassifications []NAICSIndustryClassification `json:"naicsIndustryClassifications,omitempty"`
+	IsDeprecated bool `json:"isDeprecated,omitempty"`
 	// Source representations
 	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }

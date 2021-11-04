@@ -27,15 +27,12 @@ type AdditionalSourceFields struct {
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
-	// Membership
-	MembershipRoles []MembershipRole `json:"membershipRoles,omitempty"`
 	// Organisation
-	CountryOfRiskUUID            string                        `json:"countryOfRiskUUID,omitempty"`
-	CountryOfIncorporationUUID   string                        `json:"countryOfIncorporationUUID,omitempty"`
-	CountryOfOperationsUUID      string                        `json:"countryOfOperationsUUID,omitempty"`
-	ParentOrganisation           string                        `json:"parentOrganisation,omitempty"`
-	IsDeprecated                 bool                          `json:"isDeprecated,omitempty"`
-	NAICSIndustryClassifications []NAICSIndustryClassification `json:"naicsIndustryClassifications,omitempty"`
+	CountryOfRiskUUID          string `json:"countryOfRiskUUID,omitempty"`
+	CountryOfIncorporationUUID string `json:"countryOfIncorporationUUID,omitempty"`
+	CountryOfOperationsUUID    string `json:"countryOfOperationsUUID,omitempty"`
+	ParentOrganisation         string `json:"parentOrganisation,omitempty"`
+	IsDeprecated               bool   `json:"isDeprecated,omitempty"`
 }
 
 func (sc *SourceConcept) MarshalJSON() ([]byte, error) {

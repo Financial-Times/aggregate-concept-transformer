@@ -22,6 +22,10 @@ func TestCreateAggregateConcept(t *testing.T) {
 			Sources:   "testdata/simple-relationships-sources.json",
 			Aggregate: "testdata/simple-relationships-aggregate.json",
 		},
+		"complex-relationships": {
+			Sources:   "testdata/complex-relationships-sources.json",
+			Aggregate: "testdata/complex-relationships-aggregate.json",
+		},
 	}
 
 	for name, test := range tests {

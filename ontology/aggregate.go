@@ -123,21 +123,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	buildScopeNoteOptions(scopeNoteOptions, s)
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
 
-	for _, mr := range s.MembershipRoles {
-		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
-			RoleUUID:        mr.RoleUUID,
-			InceptionDate:   mr.InceptionDate,
-			TerminationDate: mr.TerminationDate,
-		})
-	}
-
-	for _, ic := range s.NAICSIndustryClassifications {
-		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, NAICSIndustryClassification{
-			UUID: ic.UUID,
-			Rank: ic.Rank,
-		})
-	}
-
 	if s.FigiCode != "" {
 		c.FigiCode = s.FigiCode
 	}
