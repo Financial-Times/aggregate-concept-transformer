@@ -121,18 +121,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	}
 
 	buildScopeNoteOptions(scopeNoteOptions, s)
-	if len(s.SupersededByUUIDs) > 0 {
-		c.SupersededByUUIDs = s.SupersededByUUIDs
-	}
-	if len(s.ParentUUIDs) > 0 {
-		c.ParentUUIDs = s.ParentUUIDs
-	}
-	if len(s.BroaderUUIDs) > 0 {
-		c.BroaderUUIDs = s.BroaderUUIDs
-	}
-	if len(s.RelatedUUIDs) > 0 {
-		c.RelatedUUIDs = s.RelatedUUIDs
-	}
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
 
 	for _, mr := range s.MembershipRoles {
@@ -150,12 +138,6 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 		})
 	}
 
-	if s.OrganisationUUID != "" {
-		c.OrganisationUUID = s.OrganisationUUID
-	}
-	if s.PersonUUID != "" {
-		c.PersonUUID = s.PersonUUID
-	}
 	if s.FigiCode != "" {
 		c.FigiCode = s.FigiCode
 	}

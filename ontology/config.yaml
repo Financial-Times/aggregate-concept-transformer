@@ -77,4 +77,28 @@ fields:
     neoProp: "industryIdentifier"
     type: "string"
 relationships:
+  HAS_PARENT:
+    conceptField: "parentUUIDs"
+    neoCreate: true
+    mergingStrategy: "overwrite"
+  HAS_BROADER:
+    conceptField: "broaderUUIDs"
+    mergingStrategy: "overwrite"
+  IS_RELATED_TO:
+    conceptField: "relatedUUIDs"
+    mergingStrategy: "overwrite"
+  SUPERSEDED_BY:
+    conceptField: "supersededByUUIDs"
+    mergingStrategy: "overwrite"
+  # Membership
+  HAS_ORGANISATION:
+    conceptField: "organisationUUID"
+    oneToOne: true
+    neoCreate: true
+    mergingStrategy: "overwrite"
+  HAS_MEMBER:
+    conceptField: "personUUID"
+    oneToOne: true
+    neoCreate: true
+    mergingStrategy: "overwrite"
 authorities:

@@ -20,21 +20,15 @@ type RequiredSourceFields struct {
 type AdditionalSourceFields struct {
 	Fields map[string]interface{} `json:"-"`
 	// Additional fields
-	Aliases           []string `json:"aliases,omitempty"`
-	ParentUUIDs       []string `json:"parentUUIDs,omitempty"`
-	BroaderUUIDs      []string `json:"broaderUUIDs,omitempty"`
-	RelatedUUIDs      []string `json:"relatedUUIDs,omitempty"`
-	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
-	ImpliedByUUIDs    []string `json:"impliedByUUIDs,omitempty"`
-	HasFocusUUIDs     []string `json:"hasFocusUUIDs,omitempty"`
-	ScopeNote         string   `json:"scopeNote,omitempty"`
+	Aliases        []string `json:"aliases,omitempty"`
+	ImpliedByUUIDs []string `json:"impliedByUUIDs,omitempty"`
+	HasFocusUUIDs  []string `json:"hasFocusUUIDs,omitempty"`
+	ScopeNote      string   `json:"scopeNote,omitempty"`
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
 	// Membership
-	MembershipRoles  []MembershipRole `json:"membershipRoles,omitempty"`
-	OrganisationUUID string           `json:"organisationUUID,omitempty"`
-	PersonUUID       string           `json:"personUUID,omitempty"`
+	MembershipRoles []MembershipRole `json:"membershipRoles,omitempty"`
 	// Organisation
 	CountryOfRiskUUID            string                        `json:"countryOfRiskUUID,omitempty"`
 	CountryOfIncorporationUUID   string                        `json:"countryOfIncorporationUUID,omitempty"`
