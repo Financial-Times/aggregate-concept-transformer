@@ -44,7 +44,7 @@ func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
 	// TODO: ensure that fields are not overlapping
 	for key, val := range cc.Fields {
 		// serialize only fields defined in the config
-		if !GetConfig().HasField(key) && !GetConfig().HasRelationship(key) {
+		if !GetConfig().HasProperty(key) && !GetConfig().HasRelationship(key) {
 			continue
 		}
 		result[key] = val
@@ -73,7 +73,7 @@ func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 	cc.Fields = map[string]interface{}{}
-	for key := range GetConfig().Fields {
+	for key := range GetConfig().Properties {
 		val, has := fields[key]
 		if !has {
 			continue

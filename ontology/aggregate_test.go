@@ -147,7 +147,7 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	defer setGlobalConfig(backup)
 
 	cfg := backup
-	cfg.Fields = map[string]FieldConfig{
+	cfg.Properties = map[string]PropertyConfig{
 		"test": {NeoProp: "test"},
 	}
 	cfg.Relationships = map[string]RelationshipConfig{

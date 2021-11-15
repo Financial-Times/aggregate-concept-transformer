@@ -103,7 +103,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Aliases = append(c.Aliases, s.PrefLabel)
 
 	for key, val := range s.Fields {
-		if GetConfig().HasField(key) {
+		if GetConfig().HasProperty(key) {
 			c.Fields[key] = val
 			continue
 		}
