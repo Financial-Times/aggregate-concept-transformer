@@ -20,22 +20,13 @@ type RequiredConcordedFields struct {
 type AdditionalConcordedFields struct {
 	Fields map[string]interface{} `json:"-"`
 	// Additional fields
-	Aliases           []string `json:"aliases,omitempty"`
-	ParentUUIDs       []string `json:"parentUUIDs,omitempty"`
-	BroaderUUIDs      []string `json:"broaderUUIDs,omitempty"`
-	RelatedUUIDs      []string `json:"relatedUUIDs,omitempty"`
-	SupersededByUUIDs []string `json:"supersededByUUIDs,omitempty"`
-	ScopeNote         string   `json:"scopeNote,omitempty"`
+	Aliases   []string `json:"aliases,omitempty"`
+	ScopeNote string   `json:"scopeNote,omitempty"`
 	// Financial Instrument
 	FigiCode string `json:"figiCode,omitempty"`
 	IssuedBy string `json:"issuedBy,omitempty"`
-	// Membership
-	MembershipRoles  []MembershipRole `json:"membershipRoles,omitempty"`
-	OrganisationUUID string           `json:"organisationUUID,omitempty"`
-	PersonUUID       string           `json:"personUUID,omitempty"`
 	// Organisation
-	IsDeprecated                 bool                          `json:"isDeprecated,omitempty"`
-	NAICSIndustryClassifications []NAICSIndustryClassification `json:"naicsIndustryClassifications,omitempty"`
+	IsDeprecated bool `json:"isDeprecated,omitempty"`
 	// Source representations
 	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }
@@ -53,7 +44,7 @@ func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
 	// TODO: ensure that fields are not overlapping
 	for key, val := range cc.Fields {
 		// serialize only fields defined in the config
-		if !GetConfig().HasField(key) && !GetConfig().HasRelationship(key) {
+		if !GetConfig().HasProperty(key) && !GetConfig().HasRelationship(key) {
 			continue
 		}
 		result[key] = val
@@ -82,7 +73,7 @@ func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 	cc.Fields = map[string]interface{}{}
-	for key := range GetConfig().Fields {
+	for key := range GetConfig().Properties {
 		val, has := fields[key]
 		if !has {
 			continue

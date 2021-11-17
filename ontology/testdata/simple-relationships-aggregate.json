@@ -1,0 +1,53 @@
+{
+  "prefUUID": "primary source uuid",
+  "parentUUIDs": [
+    "primary parentUUIDs"
+  ],
+  "broaderUUIDs": [
+    "primary broaderUUIDs"
+  ],
+  "relatedUUIDs": [
+    "primary relatedUUIDs"
+  ],
+  "supersededByUUIDs": [
+    "primary supersededByUUIDs"
+  ],
+  "organisationUUID": "primary organisationUUID",
+  "personUUID": "primary personUUID",
+  "sourceRepresentations": [
+    {
+      "uuid": "secondary source uuid",
+      "parentUUIDs": [
+        "secondary parentUUIDs"
+      ],
+      "broaderUUIDs": [
+        "secondary broaderUUIDs"
+      ],
+      "relatedUUIDs": [
+        "secondary relatedUUIDs"
+      ],
+      "supersededByUUIDs": [
+        "secondary supersededByUUIDs"
+      ],
+      "organisationUUID": "secondary organisationUUID",
+      "personUUID": "secondary personUUID"
+    },
+    {
+      "uuid": "primary source uuid",
+      "parentUUIDs": [
+        "primary parentUUIDs"
+      ],
+      "broaderUUIDs": [
+        "primary broaderUUIDs"
+      ],
+      "relatedUUIDs": [
+        "primary relatedUUIDs"
+      ],
+      "supersededByUUIDs": [
+        "primary supersededByUUIDs"
+      ],
+      "organisationUUID": "primary organisationUUID",
+      "personUUID": "primary personUUID"
+    }
+  ]
+}

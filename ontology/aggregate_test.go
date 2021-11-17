@@ -18,6 +18,18 @@ func TestCreateAggregateConcept(t *testing.T) {
 			Sources:   "testdata/sources.json",
 			Aggregate: "testdata/aggregate.json",
 		},
+		"simple-relationships-overwrite": {
+			Sources:   "testdata/simple-relationships-sources.json",
+			Aggregate: "testdata/simple-relationships-aggregate.json",
+		},
+		"complex-relationships": {
+			Sources:   "testdata/complex-relationships-sources.json",
+			Aggregate: "testdata/complex-relationships-aggregate.json",
+		},
+		"source-only-relationships": {
+			Sources:   "testdata/source-only-relationships-sources.json",
+			Aggregate: "testdata/source-only-relationships-aggregate.json",
+		},
 	}
 
 	for name, test := range tests {
@@ -135,7 +147,7 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	defer setGlobalConfig(backup)
 
 	cfg := backup
-	cfg.Fields = map[string]FieldConfig{
+	cfg.Properties = map[string]PropertyConfig{
 		"test": {NeoProp: "test"},
 	}
 	cfg.Relationships = map[string]RelationshipConfig{

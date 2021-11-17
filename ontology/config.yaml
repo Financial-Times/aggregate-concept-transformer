@@ -1,4 +1,4 @@
-fields:
+properties:
   # General
   descriptionXML:
     neoProp: "descriptionXML"
@@ -77,4 +77,55 @@ fields:
     neoProp: "industryIdentifier"
     type: "string"
 relationships:
+  HAS_PARENT:
+    conceptField: "parentUUIDs"
+    neoCreate: true
+    mergingStrategy: "overwrite"
+  HAS_BROADER:
+    conceptField: "broaderUUIDs"
+    mergingStrategy: "overwrite"
+  IS_RELATED_TO:
+    conceptField: "relatedUUIDs"
+    mergingStrategy: "overwrite"
+  SUPERSEDED_BY:
+    conceptField: "supersededByUUIDs"
+    mergingStrategy: "overwrite"
+  IMPLIED_BY:
+    conceptField: "impliedByUUIDs"
+  HAS_FOCUS:
+    conceptField: "hasFocusUUIDs"
+  # Membership
+  HAS_ORGANISATION:
+    conceptField: "organisationUUID"
+    oneToOne: true
+    neoCreate: true
+    mergingStrategy: "overwrite"
+  HAS_MEMBER:
+    conceptField: "personUUID"
+    oneToOne: true
+    neoCreate: true
+    mergingStrategy: "overwrite"
+  HAS_ROLE: # NB: currently not in concepts-rw-neo4j
+    conceptField: "membershipRoles"
+    mergingStrategy: "aggregate"
+  # Organisation
+  COUNTRY_OF_RISK:
+    conceptField: "countryOfRiskUUID"
+    oneToOne: true
+    neoCreate: true
+  COUNTRY_OF_INCORPORATION:
+    conceptField: "countryOfIncorporationUUID"
+    oneToOne: true
+    neoCreate: true
+  COUNTRY_OF_OPERATIONS:
+    conceptField: "countryOfOperationsUUID"
+    oneToOne: true
+    neoCreate: true
+  SUB_ORGANISATION_OF:
+    conceptField: "parentOrganisation"
+    oneToOne: true
+    neoCreate: true
+  HAS_INDUSTRY_CLASSIFICATION:
+    conceptField: "naicsIndustryClassifications"
+    mergingStrategy: "aggregate"
 authorities:

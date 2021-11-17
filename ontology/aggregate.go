@@ -103,7 +103,7 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Aliases = append(c.Aliases, s.PrefLabel)
 
 	for key, val := range s.Fields {
-		if GetConfig().HasField(key) {
+		if GetConfig().HasProperty(key) {
 			c.Fields[key] = val
 			continue
 		}
@@ -121,41 +121,8 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	}
 
 	buildScopeNoteOptions(scopeNoteOptions, s)
-	if len(s.SupersededByUUIDs) > 0 {
-		c.SupersededByUUIDs = s.SupersededByUUIDs
-	}
-	if len(s.ParentUUIDs) > 0 {
-		c.ParentUUIDs = s.ParentUUIDs
-	}
-	if len(s.BroaderUUIDs) > 0 {
-		c.BroaderUUIDs = s.BroaderUUIDs
-	}
-	if len(s.RelatedUUIDs) > 0 {
-		c.RelatedUUIDs = s.RelatedUUIDs
-	}
 	c.SourceRepresentations = append(c.SourceRepresentations, s)
 
-	for _, mr := range s.MembershipRoles {
-		c.MembershipRoles = append(c.MembershipRoles, MembershipRole{
-			RoleUUID:        mr.RoleUUID,
-			InceptionDate:   mr.InceptionDate,
-			TerminationDate: mr.TerminationDate,
-		})
-	}
-
-	for _, ic := range s.NAICSIndustryClassifications {
-		c.NAICSIndustryClassifications = append(c.NAICSIndustryClassifications, NAICSIndustryClassification{
-			UUID: ic.UUID,
-			Rank: ic.Rank,
-		})
-	}
-
-	if s.OrganisationUUID != "" {
-		c.OrganisationUUID = s.OrganisationUUID
-	}
-	if s.PersonUUID != "" {
-		c.PersonUUID = s.PersonUUID
-	}
 	if s.FigiCode != "" {
 		c.FigiCode = s.FigiCode
 	}
