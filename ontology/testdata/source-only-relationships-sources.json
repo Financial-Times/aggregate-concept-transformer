@@ -1,0 +1,20 @@
+[
+  {
+    "uuid": "secondary source uuid",
+    "hasFocusUUIDs": ["secondary hasFocusUUIDs"],
+    "impliedByUUIDs": ["secondary impliedByUUIDs"],
+    "countryOfRiskUUID" : "secondary countryOfRiskUUID",
+    "countryOfIncorporationUUID": "secondary countryOfIncorporationUUID",
+    "countryOfOperationsUUID": "secondary countryOfOperationsUUID",
+    "parentOrganisation": "secondary parentOrganisation"
+  },
+  {
+    "uuid": "primary source uuid",
+    "hasFocusUUIDs": ["primary hasFocusUUIDs"],
+    "impliedByUUIDs": ["primary impliedByUUIDs"],
+    "countryOfRiskUUID" : "primary countryOfRiskUUID",
+    "countryOfIncorporationUUID": "primary countryOfIncorporationUUID",
+    "countryOfOperationsUUID": "primary countryOfOperationsUUID",
+    "parentOrganisation": "primary parentOrganisation"
+  }
+]

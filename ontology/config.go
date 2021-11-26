@@ -16,7 +16,7 @@ const (
 	AggregateStrategy MergingStrategy = "aggregate"
 )
 
-type FieldConfig struct {
+type PropertyConfig struct {
 	NeoProp   string `yaml:"neoProp"`
 	FieldType string `yaml:"type"`
 }
@@ -32,7 +32,7 @@ type RelationshipConfig struct {
 }
 
 type Config struct {
-	Fields        map[string]FieldConfig        `yaml:"fields"`
+	Properties    map[string]PropertyConfig     `yaml:"properties"`
 	Relationships map[string]RelationshipConfig `yaml:"relationships"`
 	Authorities   []string                      `yaml:"authorities"`
 
@@ -45,7 +45,7 @@ var ErrInvalidPropertyValue = errors.New("invalid property value")
 
 func (cfg Config) ValidateProperties(props map[string]interface{}) error {
 	for propName, propVal := range props {
-		if !cfg.HasField(propName) {
+		if !cfg.HasProperty(propName) {
 			return fmt.Errorf("propName=%s: %w", propName, ErrUnknownProperty)
 		}
 
@@ -57,8 +57,8 @@ func (cfg Config) ValidateProperties(props map[string]interface{}) error {
 	return nil
 }
 
-func (cfg Config) HasField(propName string) bool {
-	_, has := cfg.Fields[propName]
+func (cfg Config) HasProperty(propName string) bool {
+	_, has := cfg.Properties[propName]
 	return has
 }
 
@@ -72,7 +72,7 @@ func (cfg Config) HasRelationship(relName string) bool {
 }
 
 func (cfg Config) IsPropValueValid(propName string, val interface{}) bool {
-	fieldType := cfg.Fields[propName].FieldType
+	fieldType := cfg.Properties[propName].FieldType
 	switch fieldType {
 	case "string":
 		_, ok := val.(string)
