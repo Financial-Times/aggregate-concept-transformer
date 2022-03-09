@@ -70,13 +70,14 @@ const (
     			"updatedIDs": []
 		 }`
 	esUrl            = "concept-rw-elasticsearch"
+	esReindexerURL   = "concept-rw-elasticsearch-reindexer"
 	neo4jUrl         = "concepts-rw-neo4j"
 	varnishPurgerUrl = "varnish-purger"
 )
 
 func TestNewService(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	assert.Equal(t, 7, len(svc.Healthchecks()))
+	assert.Equal(t, 8, len(svc.Healthchecks()))
 }
 
 func TestAggregateService_ListenForNotifications(t *testing.T) {
@@ -945,6 +946,7 @@ func TestAggregateService_ProcessMessage_Success(t *testing.T) {
 			"&target=%2Fpeople%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Fpeople%2F34a571fb-d779-4610-a7ba-2e127676db4d",
 		"concept-rw-elasticsearch/people/28090964-9997-4bc2-9638-7a11135aaff9",
+		"concept-rw-elasticsearch-reindexer/people/28090964-9997-4bc2-9638-7a11135aaff9",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(eventQueue.eventList))
@@ -1024,6 +1026,7 @@ func TestAggregateService_ProcessMessage_SmartlogicMembershipSentToEs(t *testing
 		"varnish-purger/purge?target=%2Fthings%2F63ffa4d3-d7cc-4939-9bec-9ed46a78389e&target=%2Fconcepts" +
 			"%2F63ffa4d3-d7cc-4939-9bec-9ed46a78389e&target=%2Fpeople%2F63ffa4d3-d7cc-4939-9bec-9ed46a78389e",
 		"concept-rw-elasticsearch/memberships/ddacda04-b7cd-4d2e-86b1-7dfef0ff56a2",
+		"concept-rw-elasticsearch-reindexer/memberships/ddacda04-b7cd-4d2e-86b1-7dfef0ff56a2",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(eventQueue.eventList))
@@ -1056,6 +1059,7 @@ func TestAggregateService_ProcessMessage_Success_PurgeOnBrands(t *testing.T) {
 			"&target=%2Fbrands%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Fbrands%2F34a571fb-d779-4610-a7ba-2e127676db4d",
 		"concept-rw-elasticsearch/brands/781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
+		"concept-rw-elasticsearch-reindexer/brands/781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 }
@@ -1073,6 +1077,7 @@ func TestAggregateService_ProcessMessage_Success_PurgeOnOrgs(t *testing.T) {
 			"&target=%2Forganisations%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Forganisations%2F34a571fb-d779-4610-a7ba-2e127676db4d",
 		"concept-rw-elasticsearch/organisations/94659314-7eb0-423a-8030-c4abf3d6458e",
+		"concept-rw-elasticsearch-reindexer/organisations/94659314-7eb0-423a-8030-c4abf3d6458e",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 }
@@ -1090,6 +1095,7 @@ func TestAggregateService_ProcessMessage_Success_PurgeOnPublicCompany(t *testing
 			"&target=%2Forganisations%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Forganisations%2F34a571fb-d779-4610-a7ba-2e127676db4d",
 		"concept-rw-elasticsearch/organisations/e8251dab-c6d4-42d0-a4f6-430a0c565a83",
+		"concept-rw-elasticsearch-reindexer/organisations/e8251dab-c6d4-42d0-a4f6-430a0c565a83",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 }
@@ -1825,6 +1831,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 	svc := NewService(s3mock, conceptsQueue, eventsQueue, concordClient, kinesis,
 		neo4jUrl,
 		esUrl,
+		esReindexerURL,
 		varnishPurgerUrl,
 		[]string{"Person", "Brand", "PublicCompany", "Organisation"},
 		&mockHTTPClient{

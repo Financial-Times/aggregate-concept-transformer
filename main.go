@@ -115,6 +115,12 @@ func main() {
 		Desc:   "Address for the Elasticsearch Concept Writer",
 		EnvVar: "ES_WRITER_ADDRESS",
 	})
+	elasticsearchReindexerAddress := app.String(cli.StringOpt{
+		Name:   "elasticsearchReindexerAddress",
+		Value:  "http://localhost:8083/",
+		Desc:   "Address for the Elasticsearch Concept Reindexer",
+		EnvVar: "ES_REINDEXER_ADDRESS",
+	})
 	varnishPurgerAddress := app.String(cli.StringOpt{
 		Name:   "varnishPurgerAddress",
 		Value:  "http://localhost:8084/",
@@ -173,6 +179,7 @@ func main() {
 
 		logger.WithFields(log.Fields{
 			"ES_WRITER_ADDRESS":       *elasticsearchWriterAddress,
+			"ES_REINDEXER_ADDRESS":    *elasticsearchReindexerAddress,
 			"CONCORDANCES_RW_ADDRESS": *concordancesReaderAddress,
 			"NEO_WRITER_ADDRESS":      *neoWriterAddress,
 			"VARNISH_PURGER_ADDRESS":  *varnishPurgerAddress,
@@ -258,6 +265,7 @@ func main() {
 			kinesisClient,
 			*neoWriterAddress,
 			*elasticsearchWriterAddress,
+			*elasticsearchReindexerAddress,
 			*varnishPurgerAddress,
 			*typesToPurgeFromPublicEndpoints,
 			defaultHTTPClient(maxWorkers),

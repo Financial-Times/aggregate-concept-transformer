@@ -92,6 +92,7 @@ type AggregateService struct {
 	neoWriterAddress                string
 	varnishPurgerAddress            string
 	elasticsearchWriterAddress      string
+	elasticsearchReindexerAddress   string
 	httpClient                      httpClient
 	typesToPurgeFromPublicEndpoints []string
 	health                          *systemHealth
@@ -107,6 +108,7 @@ func NewService(
 	kinesisClient kinesis.Client,
 	neoAddress string,
 	elasticsearchAddress string,
+	elasticsearchReindexerAddress string,
 	varnishPurgerAddress string,
 	typesToPurgeFromPublicEndpoints []string,
 	httpClient httpClient,
@@ -131,6 +133,7 @@ func NewService(
 		kinesis:                         kinesisClient,
 		neoWriterAddress:                neoAddress,
 		elasticsearchWriterAddress:      elasticsearchAddress,
+		elasticsearchReindexerAddress:   elasticsearchReindexerAddress,
 		varnishPurgerAddress:            varnishPurgerAddress,
 		httpClient:                      httpClient,
 		typesToPurgeFromPublicEndpoints: typesToPurgeFromPublicEndpoints,
@@ -270,6 +273,9 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	if isTypeAllowedInElastic(concordedConcept) {
 		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Debug("Writing concept to elastic search")
 		if _, err = sendToWriter(ctx, s.httpClient, s.elasticsearchWriterAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, concordedConcept, transactionID); err != nil {
+			return err
+		}
+		if _, err = sendToWriter(ctx, s.httpClient, s.elasticsearchReindexerAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, concordedConcept, transactionID); err != nil {
 			return err
 		}
 	}
@@ -461,6 +467,7 @@ func (s *AggregateService) Healthchecks() []fthealth.Check {
 	if !s.readOnly {
 		checks = append(checks, s.conceptUpdatesSqs.Healthcheck())
 		checks = append(checks, s.RWElasticsearchHealthCheck())
+		checks = append(checks, s.RWElasticsearchReindexerHealthCheck())
 		checks = append(checks, s.RWNeo4JHealthCheck())
 		checks = append(checks, s.VarnishPurgerHealthCheck())
 		checks = append(checks, s.kinesis.Healthcheck())
@@ -648,6 +655,32 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 		TechnicalSummary: `Cannot connect to elasticsearch concept writer. If this check fails, check health of concept-rw-elasticsearch service`,
 		Checker: func() (string, error) {
 			urlToCheck := strings.TrimRight(s.elasticsearchWriterAddress, "/bulk") + "/__gtg"
+			req, err := http.NewRequest("GET", urlToCheck, nil)
+			if err != nil {
+				return "", err
+			}
+			resp, err := s.httpClient.Do(req)
+			if err != nil {
+				return "", fmt.Errorf("error calling writer at %s : %v", urlToCheck, err)
+			}
+			resp.Body.Close()
+			if resp != nil && resp.StatusCode != http.StatusOK {
+				return "", fmt.Errorf("writer %v returned status %d", urlToCheck, resp.StatusCode)
+			}
+			return "", nil
+		},
+	}
+}
+
+func (s *AggregateService) RWElasticsearchReindexerHealthCheck() fthealth.Check {
+	return fthealth.Check{
+		BusinessImpact:   "Editorial updates of concepts will not be written into UPP",
+		Name:             "Check connectivity to concept-rw-elasticsearch-reindexer",
+		PanicGuide:       "https://runbooks.in.ft.com/aggregate-concept-transformer",
+		Severity:         3,
+		TechnicalSummary: `Cannot connect to elasticsearch concept reindexer. If this check fails, check health of concept-rw-elasticsearch-reindexer service`,
+		Checker: func() (string, error) {
+			urlToCheck := strings.TrimRight(s.elasticsearchReindexerAddress, "/bulk") + "/__gtg"
 			req, err := http.NewRequest("GET", urlToCheck, nil)
 			if err != nil {
 				return "", err
