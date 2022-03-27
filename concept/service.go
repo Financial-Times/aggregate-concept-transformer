@@ -14,11 +14,12 @@ import (
 	"time"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	logger "github.com/Financial-Times/go-logger"
+	"github.com/Financial-Times/go-logger"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology/aggregate"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
@@ -444,7 +445,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		sources = append(sources, sourceConcept)
 	}
-	concordedConcept := ontology.CreateAggregateConcept(primaryConcept, sources)
+	concordedConcept := aggregate.CreateAggregateConcept(primaryConcept, sources)
 	oldConcorded, err := transform.ToOldAggregateConcept(concordedConcept)
 	if err != nil {
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")

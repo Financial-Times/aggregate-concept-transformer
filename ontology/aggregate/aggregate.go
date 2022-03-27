@@ -1,12 +1,9 @@
-package ontology
+package aggregate
 
 import (
 	"strings"
-)
 
-const (
-	SmartlogicAuthority      = "Smartlogic"
-	ManagedLocationAuthority = "ManagedLocation"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 // CreateAggregateConcept creates ConcordedConcept by merging properties and relationships from primary and others SourceConcept
@@ -15,9 +12,9 @@ const (
 // the data from the primary will be in the ConcordedConcept
 // Exception to this rule are relationships that are with MergingStrategy: AggregateStrategy.
 // Those relationships will be collected from both primary and others SourceConcept into ConcordedConcept
-func CreateAggregateConcept(primary SourceConcept, others []SourceConcept) ConcordedConcept {
+func CreateAggregateConcept(primary ontology.SourceConcept, others []ontology.SourceConcept) ontology.ConcordedConcept {
 	var scopeNoteOptions = map[string][]string{}
-	concordedConcept := ConcordedConcept{}
+	concordedConcept := ontology.ConcordedConcept{}
 	concordedConcept.Fields = map[string]interface{}{} // initialise Fields to be able to safely access it later
 	for _, src := range others {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
@@ -29,8 +26,8 @@ func CreateAggregateConcept(primary SourceConcept, others []SourceConcept) Conco
 	return concordedConcept
 }
 
-func chooseScopeNote(concept ConcordedConcept, scopeNoteOptions map[string][]string) string {
-	if sn, ok := scopeNoteOptions[SmartlogicAuthority]; ok {
+func chooseScopeNote(concept ontology.ConcordedConcept, scopeNoteOptions map[string][]string) string {
+	if sn, ok := scopeNoteOptions[ontology.SmartlogicAuthority]; ok {
 		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
 	}
 	if sn, ok := scopeNoteOptions["Wikidata"]; ok {
@@ -82,7 +79,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s ontology.SourceConcept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -95,7 +92,7 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
 }
 
 // nolint:gocognit // in the process of simplifying this function
-func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOptions map[string][]string) ConcordedConcept {
+func mergeCanonicalInformation(c ontology.ConcordedConcept, s ontology.SourceConcept, scopeNoteOptions map[string][]string) ontology.ConcordedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
@@ -103,15 +100,15 @@ func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOpt
 	c.Aliases = append(c.Aliases, s.PrefLabel)
 
 	for key, val := range s.Fields {
-		if GetConfig().HasProperty(key) {
+		if ontology.GetConfig().HasProperty(key) {
 			c.Fields[key] = val
 			continue
 		}
 
-		switch GetConfig().MergingStrategies[key] {
-		case OverwriteStrategy:
+		switch ontology.GetConfig().MergingStrategies[key] {
+		case ontology.OverwriteStrategy:
 			c.Fields[key] = val
-		case AggregateStrategy:
+		case ontology.AggregateStrategy:
 			if _, has := c.Fields[key]; !has {
 				c.Fields[key] = []interface{}{}
 			}

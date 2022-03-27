@@ -9,6 +9,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	SmartlogicAuthority      = "Smartlogic"
+	ManagedLocationAuthority = "ManagedLocation"
+)
+
 type MergingStrategy string
 
 const (
@@ -137,7 +142,7 @@ func GetConfig() Config {
 	return config
 }
 
-func setGlobalConfig(cfg Config) {
+func SetGlobalConfig(cfg Config) {
 	config = cfg
 	initConfig(&config)
 }
