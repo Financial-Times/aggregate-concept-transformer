@@ -120,7 +120,7 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 			actual := CreateAggregateConcept(test.Primary, test.Sources)
 			sources := test.Sources
 			sources = append(sources, test.Primary)
-			expected := ontology.ConcordedConcept{
+			expected := ontology.NewAggregatedConcept{
 				AdditionalConcordedFields: ontology.AdditionalConcordedFields{
 					Fields:                test.Primary.Fields,
 					SourceRepresentations: sources,
@@ -176,7 +176,7 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	}
 }
 
-func sortAliases(concorded *ontology.ConcordedConcept) {
+func sortAliases(concorded *ontology.NewAggregatedConcept) {
 	sort.Strings(concorded.Aliases)
 	for idx := 0; idx < len(concorded.SourceRepresentations); idx++ {
 		sort.Strings(concorded.SourceRepresentations[idx].Aliases)
@@ -198,14 +198,14 @@ func readSourcesFixture(t *testing.T, fixture string) []ontology.SourceConcept {
 	return result
 }
 
-func readAggregateFixture(t *testing.T, fixture string) ontology.ConcordedConcept {
+func readAggregateFixture(t *testing.T, fixture string) ontology.NewAggregatedConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := ontology.ConcordedConcept{}
+	result := ontology.NewAggregatedConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)

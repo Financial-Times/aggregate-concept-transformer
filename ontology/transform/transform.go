@@ -32,20 +32,20 @@ func ToOldSourceConcept(new ontology.SourceConcept) (OldConcept, error) {
 	return result, nil
 }
 
-func ToNewAggregateConcept(old OldConcordedConcept) (ontology.ConcordedConcept, error) {
+func ToNewAggregateConcept(old OldConcordedConcept) (ontology.NewAggregatedConcept, error) {
 	data, err := json.Marshal(&old)
 	if err != nil {
-		return ontology.ConcordedConcept{}, err
+		return ontology.NewAggregatedConcept{}, err
 	}
-	result := ontology.ConcordedConcept{}
+	result := ontology.NewAggregatedConcept{}
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return ontology.ConcordedConcept{}, err
+		return ontology.NewAggregatedConcept{}, err
 	}
 	return result, nil
 }
 
-func ToOldAggregateConcept(new ontology.ConcordedConcept) (OldConcordedConcept, error) {
+func ToOldAggregateConcept(new ontology.NewAggregatedConcept) (OldConcordedConcept, error) {
 	data, err := json.Marshal(&new)
 	if err != nil {
 		return OldConcordedConcept{}, err

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 )
 
-// ConcordedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
-type ConcordedConcept struct {
+// NewAggregatedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
+type NewAggregatedConcept struct {
 	RequiredConcordedFields
 	AdditionalConcordedFields
 }
@@ -31,7 +31,7 @@ type AdditionalConcordedFields struct {
 	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }
 
-func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
+func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(cc.RequiredConcordedFields)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result)
 }
 
-func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
+func (cc *NewAggregatedConcept) UnmarshalJSON(bytes []byte) error {
 	err := json.Unmarshal(bytes, &cc.RequiredConcordedFields)
 	if err != nil {
 		return err

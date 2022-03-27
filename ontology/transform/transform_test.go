@@ -66,7 +66,7 @@ func TestToOldSourceConcept(t *testing.T) {
 func TestToNewAggregateConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/aggregate.json")
 	old := transform.OldConcordedConcept{}
-	concorded := ontology.ConcordedConcept{}
+	concorded := ontology.NewAggregatedConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
 	if err != nil {
@@ -91,7 +91,7 @@ func TestToNewAggregateConcept(t *testing.T) {
 func TestToOldAggregateConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/aggregate.json")
 	old := transform.OldConcordedConcept{}
-	source := ontology.ConcordedConcept{}
+	source := ontology.NewAggregatedConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
 	if err != nil {
