@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-type SourceConcept struct {
+type NewConcept struct {
 	RequiredSourceFields
 	AdditionalSourceFields
 }
@@ -29,7 +29,7 @@ type AdditionalSourceFields struct {
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
 }
 
-func (sc *SourceConcept) MarshalJSON() ([]byte, error) {
+func (sc *NewConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(sc.RequiredSourceFields)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (sc *SourceConcept) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result)
 }
 
-func (sc *SourceConcept) UnmarshalJSON(bytes []byte) error {
+func (sc *NewConcept) UnmarshalJSON(bytes []byte) error {
 	err := json.Unmarshal(bytes, &sc.RequiredSourceFields)
 	if err != nil {
 		return err

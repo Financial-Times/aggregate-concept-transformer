@@ -28,7 +28,7 @@ type AdditionalConcordedFields struct {
 	// Organisation
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
 	// Source representations
-	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
+	SourceRepresentations []NewConcept `json:"sourceRepresentations,omitempty"`
 }
 
 func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {

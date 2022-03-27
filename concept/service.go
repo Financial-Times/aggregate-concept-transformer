@@ -436,7 +436,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		return transform.OldAggregatedConcept{}, "", err
 	}
 
-	var sources []ontology.SourceConcept
+	var sources []ontology.NewConcept
 	for _, old := range oldConcepts {
 		sourceConcept, err := transform.ToNewSourceConcept(old) //nolint: govet // we don't care that err is shadow
 		if err != nil {

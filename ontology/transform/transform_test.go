@@ -16,7 +16,7 @@ func TestToNewSourceConcept(t *testing.T) {
 	// OldConcept and Source Concept should have the same json representation
 	jsonData := readFixture(t, "testdata/single-source.json")
 	old := transform.OldConcept{}
-	source := ontology.SourceConcept{}
+	source := ontology.NewConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
 	if err != nil {
@@ -41,7 +41,7 @@ func TestToNewSourceConcept(t *testing.T) {
 func TestToOldSourceConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/single-source.json")
 	old := transform.OldConcept{}
-	source := ontology.SourceConcept{}
+	source := ontology.NewConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
 	if err != nil {

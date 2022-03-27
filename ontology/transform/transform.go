@@ -6,20 +6,20 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
-func ToNewSourceConcept(old OldConcept) (ontology.SourceConcept, error) {
+func ToNewSourceConcept(old OldConcept) (ontology.NewConcept, error) {
 	data, err := json.Marshal(&old)
 	if err != nil {
-		return ontology.SourceConcept{}, err
+		return ontology.NewConcept{}, err
 	}
-	result := ontology.SourceConcept{}
+	result := ontology.NewConcept{}
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return ontology.SourceConcept{}, err
+		return ontology.NewConcept{}, err
 	}
 	return result, nil
 }
 
-func ToOldSourceConcept(new ontology.SourceConcept) (OldConcept, error) {
+func ToOldSourceConcept(new ontology.NewConcept) (OldConcept, error) {
 	data, err := json.Marshal(&new)
 	if err != nil {
 		return OldConcept{}, err

@@ -53,11 +53,11 @@ func TestCreateAggregateConcept(t *testing.T) {
 
 func TestCreateAggregateConcept_Properties(t *testing.T) {
 	tests := map[string]struct {
-		Primary ontology.SourceConcept
-		Sources []ontology.SourceConcept
+		Primary ontology.NewConcept
+		Sources []ontology.NewConcept
 	}{
 		"Properties": {
-			Primary: ontology.SourceConcept{AdditionalSourceFields: ontology.AdditionalSourceFields{Fields: map[string]interface{}{
+			Primary: ontology.NewConcept{AdditionalSourceFields: ontology.AdditionalSourceFields{Fields: map[string]interface{}{
 				"descriptionXML":         "primary description",
 				"_imageUrl":              "primary image",
 				"emailAddress":           "primary emailAddress",
@@ -84,7 +84,7 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 				"industryIdentifier":     "primary industryIdentifier",
 			}},
 			},
-			Sources: []ontology.SourceConcept{
+			Sources: []ontology.NewConcept{
 				{AdditionalSourceFields: ontology.AdditionalSourceFields{Fields: map[string]interface{}{
 					"descriptionXML":         "secondary description",
 					"_imageUrl":              "secondary image",
@@ -183,14 +183,14 @@ func sortAliases(concorded *ontology.NewAggregatedConcept) {
 	}
 }
 
-func readSourcesFixture(t *testing.T, fixture string) []ontology.SourceConcept {
+func readSourcesFixture(t *testing.T, fixture string) []ontology.NewConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := []ontology.SourceConcept{}
+	result := []ontology.NewConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
