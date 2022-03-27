@@ -1,4 +1,4 @@
-package ontology_test
+package transform_test
 
 import (
 	"encoding/json"
@@ -9,12 +9,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 )
 
-func TestOldConcept_ToSourceConcept(t *testing.T) {
+func TestToNewSourceConcept(t *testing.T) {
 	// OldConcept and Source Concept should have the same json representation
 	jsonData := readFixture(t, "testdata/single-source.json")
-	old := ontology.OldConcept{}
+	old := transform.OldConcept{}
 	source := ontology.SourceConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
@@ -26,7 +27,7 @@ func TestOldConcept_ToSourceConcept(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sourceTransfomed, err := old.ToSourceConcept()
+	sourceTransfomed, err := transform.ToNewSourceConcept(old)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,9 +38,9 @@ func TestOldConcept_ToSourceConcept(t *testing.T) {
 	}
 }
 
-func TestSourceConcept_ToOldConcept(t *testing.T) {
+func TestToOldSourceConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/single-source.json")
-	old := ontology.OldConcept{}
+	old := transform.OldConcept{}
 	source := ontology.SourceConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
@@ -51,7 +52,7 @@ func TestSourceConcept_ToOldConcept(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldTransformed, err := source.ToOldConcept()
+	oldTransformed, err := transform.ToOldSourceConcept(source)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,9 +63,9 @@ func TestSourceConcept_ToOldConcept(t *testing.T) {
 	}
 }
 
-func TestOldConcordedConcept_ToConcordedConcept(t *testing.T) {
+func TestToNewAggregateConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/aggregate.json")
-	old := ontology.OldConcordedConcept{}
+	old := transform.OldConcordedConcept{}
 	concorded := ontology.ConcordedConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
@@ -76,7 +77,7 @@ func TestOldConcordedConcept_ToConcordedConcept(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	concordedTransformed, err := old.ToConcordedConcept()
+	concordedTransformed, err := transform.ToNewAggregateConcept(old)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,9 +88,9 @@ func TestOldConcordedConcept_ToConcordedConcept(t *testing.T) {
 	}
 }
 
-func TestConcordedConcept_ToOldConcordedConcept(t *testing.T) {
+func TestToOldAggregateConcept(t *testing.T) {
 	jsonData := readFixture(t, "testdata/aggregate.json")
-	old := ontology.OldConcordedConcept{}
+	old := transform.OldConcordedConcept{}
 	source := ontology.ConcordedConcept{}
 
 	err := json.Unmarshal(jsonData, &old)
@@ -101,7 +102,7 @@ func TestConcordedConcept_ToOldConcordedConcept(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldTransformed, err := source.ToOldConcordedConcept()
+	oldTransformed, err := transform.ToOldAggregateConcept(source)
 	if err != nil {
 		t.Fatal(err)
 	}

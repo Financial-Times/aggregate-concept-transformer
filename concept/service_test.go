@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
@@ -131,7 +131,7 @@ func TestAggregateService_ProcessConceptUpdate_ContextTimeout(t *testing.T) {
 
 	svc, s3mock, _, _, _, _, _ := setupTestServiceWithTimeout(200, payload, time.Millisecond*10)
 	s3mock.callsMocked = true
-	s3mock.On("GetConceptAndTransactionID", "test-uuid").Return(false, ontology.OldConcept{}, "", nil).After(time.Second * 1)
+	s3mock.On("GetConceptAndTransactionID", "test-uuid").Return(false, transform.OldConcept{}, "", nil).After(time.Second * 1)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	update := sqs.ConceptUpdate{
@@ -164,13 +164,13 @@ func TestAggregateService_GetConcordedConcept_CancelContext(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_Location(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "f8024a12-2d71-4f0e-996d-bcbc07df3921",
 		PrefLabel: "Paris",
 		Type:      "Location",
 		Aliases:   []string{"Paris", "Paris, Texas"},
 		ScopeNote: "Paris, Texas",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "900dd202-fccc-3280-b053-d46c234dcbe2",
 				PrefLabel: "Paris, Texas",
@@ -197,14 +197,14 @@ func TestAggregateService_GetConcordedConcept_Location(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "FR_ML_UUID",
 		PrefLabel: "France",
 		Type:      "Location",
 		Aliases:   []string{"France", "French Republic"},
 		ScopeNote: "French Republic",
 		ISO31661:  "FR",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "FR_TME_UUID",
 				PrefLabel: "French Republic",
@@ -233,14 +233,14 @@ func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.
 
 func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "BE_SL_UUID",
 		PrefLabel: "Belgium",
 		Type:      "Location",
 		Aliases:   []string{"Belgium", "Kingdom of Belgium", "Royaume de Belgique"},
 		ScopeNote: "Royaume de Belgique",
 		ISO31661:  "BE",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "BE_ML_UUID",
 				PrefLabel: "Kingdom of Belgium",
@@ -284,7 +284,7 @@ func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaff9",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -298,7 +298,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 		TerminationDate: "2011-11-29",
 		FigiCode:        "BBG000Y1HJT8",
 		IssuedBy:        "613b1f72-cc74-4d8f-9406-28fc91b82a2a",
-		MembershipRoles: []ontology.MembershipRole{
+		MembershipRoles: []transform.MembershipRole{
 			{
 				RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 				InceptionDate:   "2002-06-01",
@@ -308,7 +308,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 		OrganisationUUID: "a4528fc9-0615-4bfa-bc99-596ea1ddec28",
 		PersonUUID:       "973509c1-5238-4c83-9a7d-89009e839ff8",
 		IsDeprecated:     false,
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:         "34a571fb-d779-4610-a7ba-2e127676db4d",
 				PrefLabel:    "TME Concept",
@@ -332,7 +332,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 				TerminationDate: "2011-11-29",
 				FigiCode:        "BBG000Y1HJT8",
 				IssuedBy:        "613b1f72-cc74-4d8f-9406-28fc91b82a2a",
-				MembershipRoles: []ontology.MembershipRole{
+				MembershipRoles: []transform.MembershipRole{
 					{
 						RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 						InceptionDate:   "2002-06-01",
@@ -355,7 +355,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf10",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -369,7 +369,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 		TerminationDate: "2011-11-29",
 		FigiCode:        "BBG000Y1HJT8",
 		IssuedBy:        "613b1f72-cc74-4d8f-9406-28fc91b82a2a",
-		MembershipRoles: []ontology.MembershipRole{
+		MembershipRoles: []transform.MembershipRole{
 			{
 				RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 				InceptionDate:   "2002-06-01",
@@ -379,7 +379,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 		OrganisationUUID: "a4528fc9-0615-4bfa-bc99-596ea1ddec28",
 		PersonUUID:       "973509c1-5238-4c83-9a7d-89009e839ff8",
 		IsDeprecated:     true,
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:         "34a571fb-d779-4610-a7ba-2e127676db4e",
 				PrefLabel:    "TME Concept",
@@ -403,7 +403,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 				TerminationDate: "2011-11-29",
 				FigiCode:        "BBG000Y1HJT8",
 				IssuedBy:        "613b1f72-cc74-4d8f-9406-28fc91b82a2a",
-				MembershipRoles: []ontology.MembershipRole{
+				MembershipRoles: []transform.MembershipRole{
 					{
 						RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 						InceptionDate:   "2002-06-01",
@@ -427,7 +427,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 
 func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf11",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -444,7 +444,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 		SupersededByUUIDs: []string{
 			"28090964-9997-4bc2-9638-7a11135aaff9",
 		},
-		MembershipRoles: []ontology.MembershipRole{
+		MembershipRoles: []transform.MembershipRole{
 			{
 				RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 				InceptionDate:   "2002-06-01",
@@ -454,7 +454,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 		OrganisationUUID: "a4528fc9-0615-4bfa-bc99-596ea1ddec28",
 		PersonUUID:       "973509c1-5238-4c83-9a7d-89009e839ff8",
 		IsDeprecated:     true,
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:            "28090964-9997-4bc2-9638-7a11135aaf11",
 				PrefLabel:       "Root Concept",
@@ -473,7 +473,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 				SupersededByUUIDs: []string{
 					"28090964-9997-4bc2-9638-7a11135aaff9",
 				},
-				MembershipRoles: []ontology.MembershipRole{
+				MembershipRoles: []transform.MembershipRole{
 					{
 						RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 						InceptionDate:   "2002-06-01",
@@ -497,7 +497,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_ConceptWithRelationships(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:       "781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
 		PrefLabel:      "Test FT Brand",
 		Type:           "Brand",
@@ -508,7 +508,7 @@ func TestAggregateService_GetConcordedConcept_ConceptWithRelationships(t *testin
 		DescriptionXML: "<body>The best brand</body>",
 		Strapline:      "The Best Brand",
 		ImageURL:       "localhost:8080/12345",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:           "781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
 				PrefLabel:      "Test FT Brand",
@@ -535,7 +535,7 @@ func TestAggregateService_GetConcordedConcept_ConceptWithRelationships(t *testin
 
 func TestAggregateService_GetConcordedConcept_FinancialInstrument(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:     "6562674e-dbfa-4cb0-85b2-41b0948b7cc2",
 		PrefLabel:    "Some random financial instrument",
 		Type:         "FinancialInstrument",
@@ -543,7 +543,7 @@ func TestAggregateService_GetConcordedConcept_FinancialInstrument(t *testing.T) 
 		FigiCode:     "BBG000Y1HJT8",
 		IssuedBy:     "4e484678-cf47-4168-b844-6adb47f8eb58",
 		IsDeprecated: false,
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "6562674e-dbfa-4cb0-85b2-41b0948b7cc2",
 				PrefLabel: "Some random financial instrument",
@@ -566,7 +566,7 @@ func TestAggregateService_GetConcordedConcept_FinancialInstrument(t *testing.T) 
 
 func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:   "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
 		Type:       "PublicCompany",
 		ProperName: "Strix Group Plc",
@@ -592,7 +592,7 @@ func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 		YearFounded:            1951,
 		EmailAddress:           "info@strix.com",
 		LeiCode:                "213800KZEW5W6BZMNT62",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:       "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
 				Type:       "PublicCompany",
@@ -640,7 +640,7 @@ func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:   "a141f50f-31d7-4f89-8143-eec971e54ba8",
 		Type:       "PublicCompany",
 		ProperName: "Strix Group Plc",
@@ -667,7 +667,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 		YearFounded:            1951,
 		EmailAddress:           "info@strix.com",
 		LeiCode:                "213800KZEW5W6BZMNT62",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:       "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
 				Type:       "PublicCompany",
@@ -722,14 +722,14 @@ func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "Organisation_WithNAICSCodes_Smartlogic_UUID",
 		Type:      "PublicCompany",
 		PrefLabel: "Apple, Inc.",
 		Aliases: []string{
 			"Apple, Inc.",
 		},
-		NAICSIndustryClassifications: []ontology.NAICSIndustryClassification{
+		NAICSIndustryClassifications: []transform.NAICSIndustryClassification{
 			{
 				UUID: "25c3be2a-15e0-434e-aaa9-ca067e70ae11",
 				Rank: 1,
@@ -747,14 +747,14 @@ func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *te
 				Rank: 4,
 			},
 		},
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "Organisation_WithNAICSCodes_Factset_UUID",
 				Type:      "PublicCompany",
 				Authority: "FACTSET",
 				AuthValue: "000C7F-E",
 				PrefLabel: "Apple, Inc.",
-				NAICSIndustryClassifications: []ontology.NAICSIndustryClassification{
+				NAICSIndustryClassifications: []transform.NAICSIndustryClassification{
 					{
 						UUID: "25c3be2a-15e0-434e-aaa9-ca067e70ae11",
 						Rank: 1,
@@ -794,12 +794,12 @@ func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *te
 
 func TestAggregateService_GetConcordedConcept_BoardRole(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "344fdb1d-0585-31f7-814f-b478e54dbe1f",
 		PrefLabel: "Director/Board Member",
 		Type:      "BoardRole",
 		Aliases:   []string{"Director/Board Member"},
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "344fdb1d-0585-31f7-814f-b478e54dbe1f",
 				PrefLabel: "Director/Board Member",
@@ -820,12 +820,12 @@ func TestAggregateService_GetConcordedConcept_BoardRole(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_LoneTME(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:  "99309d51-8969-4a1e-8346-d51f1981479b",
 		PrefLabel: "Lone TME Concept",
 		Type:      "Person",
 		Aliases:   []string{"Lone TME Concept"},
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "99309d51-8969-4a1e-8346-d51f1981479b",
 				PrefLabel: "Lone TME Concept",
@@ -846,7 +846,7 @@ func TestAggregateService_GetConcordedConcept_LoneTME(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:         "87cda39a-e354-3dfb-b28a-b9a04887577b",
 		PrefLabel:        "Independent Non-Executive Director",
 		Type:             "Membership",
@@ -855,7 +855,7 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 		OrganisationUUID: "064ce159-8835-3426-b456-c86d48de8511",
 		InceptionDate:    "2002-06-01",
 		TerminationDate:  "2011-11-30",
-		MembershipRoles: []ontology.MembershipRole{
+		MembershipRoles: []transform.MembershipRole{
 			{
 
 				RoleUUID:        "344fdb1d-0585-31f7-814f-b478e54dbe1f",
@@ -868,7 +868,7 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 				TerminationDate: "2011-11-29",
 			},
 		},
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:             "87cda39a-e354-3dfb-b28a-b9a04887577b",
 				PrefLabel:        "Independent Non-Executive Director",
@@ -879,7 +879,7 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 				OrganisationUUID: "064ce159-8835-3426-b456-c86d48de8511",
 				InceptionDate:    "2002-06-01",
 				TerminationDate:  "2011-11-30",
-				MembershipRoles: []ontology.MembershipRole{
+				MembershipRoles: []transform.MembershipRole{
 					{
 
 						RoleUUID:        "344fdb1d-0585-31f7-814f-b478e54dbe1f",
@@ -906,13 +906,13 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_IndustryClassification(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := ontology.OldConcordedConcept{
+	expectedConcept := transform.OldConcordedConcept{
 		PrefUUID:           "IndustryClassification_Smartlogic_UUID",
 		PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 		Type:               "NAICSIndustryClassification",
 		Aliases:            []string{"Newspaper, Periodical, Book, and Directory Publishers"},
 		IndustryIdentifier: "5111",
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:               "IndustryClassification_Smartlogic_UUID",
 				PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
@@ -1150,12 +1150,12 @@ func TestAggregateService_ProcessMessage_S3SourceNotFoundStillWrittenAsThing(t *
 	mockWriter := svc.httpClient.(*mockHTTPClient)
 	actualBody, err := ioutil.ReadAll(mockWriter.capturedBody)
 	assert.NoError(t, err)
-	expectedConcordedConcept := ontology.OldConcordedConcept{
+	expectedConcordedConcept := transform.OldConcordedConcept{
 		PrefUUID:  testUUID,
 		PrefLabel: "TME Concept",
 		Type:      "Person",
 		Aliases:   []string{"TME Concept"},
-		SourceRepresentations: []ontology.OldConcept{
+		SourceRepresentations: []transform.OldConcept{
 			{
 				UUID:      "3a3da730-0f4c-4a20-85a6-3ebd5776bd49",
 				Type:      "Thing",
@@ -1240,11 +1240,11 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 	s3mock := &mockS3Client{
 		concepts: map[string]struct {
 			transactionID string
-			concept       ontology.OldConcept
+			concept       transform.OldConcept
 		}{
 			"c28fa0b4-4245-11e8-842f-0ed5f89f718b": {
 				transactionID: "tid_631",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:       "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
 					Type:       "PublicCompany",
 					Authority:  "FACTSET",
@@ -1280,7 +1280,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"99247059-04ec-3abb-8693-a0b8951fdcab": {
 				transactionID: "tid_123",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:       "99247059-04eFc-3abb-8693-a0b8951fdcab",
 					PrefLabel:  "Test Concept",
 					Authority:  "Smartlogic",
@@ -1292,7 +1292,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"28090964-9997-4bc2-9638-7a11135aaff9": {
 				transactionID: "tid_456",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:          "28090964-9997-4bc2-9638-7a11135aaff9",
 					PrefLabel:     "Root Concept",
 					Authority:     "Smartlogic",
@@ -1303,7 +1303,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					ScopeNote:     "This note is in scope",
 					EmailAddress:  "person123@ft.com",
 					ShortLabel:    "Concept",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 							RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 							InceptionDate:   "2002-06-01",
@@ -1320,7 +1320,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"34a571fb-d779-4610-a7ba-2e127676db4d": {
 				transactionID: "tid_789",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:         "34a571fb-d779-4610-a7ba-2e127676db4d",
 					PrefLabel:    "TME Concept",
 					Authority:    "TME",
@@ -1331,7 +1331,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"28090964-9997-4bc2-9638-7a11135aaf10": {
 				transactionID: "tid_456",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:          "28090964-9997-4bc2-9638-7a11135aaf10",
 					PrefLabel:     "Root Concept",
 					Authority:     "Smartlogic",
@@ -1342,7 +1342,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					ScopeNote:     "This note is in scope",
 					EmailAddress:  "person123@ft.com",
 					ShortLabel:    "Concept",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 							RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 							InceptionDate:   "2002-06-01",
@@ -1360,7 +1360,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"34a571fb-d779-4610-a7ba-2e127676db4e": {
 				transactionID: "tid_789",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:         "34a571fb-d779-4610-a7ba-2e127676db4e",
 					PrefLabel:    "TME Concept",
 					Authority:    "TME",
@@ -1371,7 +1371,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"28090964-9997-4bc2-9638-7a11135aaf11": {
 				transactionID: "tid_456",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:          "28090964-9997-4bc2-9638-7a11135aaf11",
 					PrefLabel:     "Root Concept",
 					Authority:     "Smartlogic",
@@ -1385,7 +1385,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					SupersededByUUIDs: []string{
 						"28090964-9997-4bc2-9638-7a11135aaff9",
 					},
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 							RoleUUID:        "ccdff192-4d6c-4539-bbe8-7e24e81ed49e",
 							InceptionDate:   "2002-06-01",
@@ -1403,7 +1403,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"c9d3a92a-da84-11e7-a121-0401beb96201": {
 				transactionID: "tid_629",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "c9d3a92a-da84-11e7-a121-0401beb96201",
 					PrefLabel: "TME Concept",
 					Authority: "TME",
@@ -1413,7 +1413,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"99309d51-8969-4a1e-8346-d51f1981479b": {
 				transactionID: "tid_439",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "99309d51-8969-4a1e-8346-d51f1981479b",
 					PrefLabel: "Lone TME Concept",
 					Authority: "TME",
@@ -1423,7 +1423,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"6562674e-dbfa-4cb0-85b2-41b0948b7cc2": {
 				transactionID: "tid_630",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "6562674e-dbfa-4cb0-85b2-41b0948b7cc2",
 					PrefLabel: "Some random financial instrument",
 					Authority: "FACTSET",
@@ -1435,7 +1435,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"344fdb1d-0585-31f7-814f-b478e54dbe1f": {
 				transactionID: "tid_631",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "344fdb1d-0585-31f7-814f-b478e54dbe1f",
 					PrefLabel: "Director/Board Member",
 					Authority: "FACTSET",
@@ -1445,7 +1445,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"87cda39a-e354-3dfb-b28a-b9a04887577b": {
 				transactionID: "tid_632",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:             "87cda39a-e354-3dfb-b28a-b9a04887577b",
 					PrefLabel:        "Independent Non-Executive Director",
 					Authority:        "FACTSET",
@@ -1455,7 +1455,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					OrganisationUUID: "064ce159-8835-3426-b456-c86d48de8511",
 					InceptionDate:    "2002-06-01",
 					TerminationDate:  "2011-11-30",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 
 							RoleUUID:        "344fdb1d-0585-31f7-814f-b478e54dbe1f",
@@ -1472,7 +1472,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"781bb463-dc53-4d3e-9d49-c48dc4cf6d55": {
 				transactionID: "tid_633",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:           "781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
 					PrefLabel:      "Test FT Brand",
 					Authority:      "Smartlogic",
@@ -1490,7 +1490,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"94659314-7eb0-423a-8030-c4abf3d6458e": {
 				transactionID: "tid_634",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "94659314-7eb0-423a-8030-c4abf3d6458e",
 					PrefLabel: "Test FT Organisation",
 					Authority: "Smartlogic",
@@ -1500,7 +1500,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"e8251dab-c6d4-42d0-a4f6-430a0c565a83": {
 				transactionID: "tid_635",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "e8251dab-c6d4-42d0-a4f6-430a0c565a83",
 					PrefLabel: "Test FT Public Company",
 					Authority: "Smartlogic",
@@ -1510,7 +1510,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"a141f50f-31d7-4f89-8143-eec971e54ba8": {
 				transactionID: "tid_636",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "a141f50f-31d7-4f89-8143-eec971e54ba8",
 					PrefLabel: "Test FT Concorded Organisation",
 					Authority: "Smartlogic",
@@ -1520,7 +1520,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"ce922022-8114-11e8-8f42-da24cd01f044": {
 				transactionID: "tid_637",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:             "ce922022-8114-11e8-8f42-da24cd01f044",
 					PrefLabel:        "Test Membership",
 					Authority:        "FACTSET",
@@ -1530,7 +1530,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					OrganisationUUID: "064ce159-8835-3426-b456-c86d48de8511",
 					InceptionDate:    "2000-01-01",
 					TerminationDate:  "2009-12-31",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 
 							RoleUUID:        "344fdb1d-0585-31f7-814f-b478e54dbe1f",
@@ -1542,7 +1542,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"01e284c2-7d77-4df6-8df7-57ec006194a4": {
 				transactionID: "tid_854",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "01e284c2-7d77-4df6-8df7-57ec006194a4",
 					PrefLabel: "Czar of the Universe",
 					Authority: "FACTSET",
@@ -1552,7 +1552,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"f784be91-601a-42db-ac57-e1d5da8b4866": {
 				transactionID: "tid_824",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:             "f784be91-601a-42db-ac57-e1d5da8b4866",
 					PrefLabel:        "Supreme Ruler",
 					Authority:        "FACTSET",
@@ -1560,7 +1560,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:             "Membership",
 					OrganisationUUID: "a141f50f-31d7-4f89-8143-eec971e54ba8",
 					PersonUUID:       "99309d51-8969-4a1e-8346-d51f1981479b",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 							RoleUUID: "01e284c2-7d77-4df6-8df7-57ec006194a4",
 						},
@@ -1569,7 +1569,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"ddacda04-b7cd-4d2e-86b1-7dfef0ff56a2": {
 				transactionID: "tid_771",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:             "ddacda04-b7cd-4d2e-86b1-7dfef0ff56a2",
 					PrefLabel:        "Author McAuthorface",
 					Authority:        "Smartlogic",
@@ -1577,7 +1577,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:             "Membership",
 					OrganisationUUID: "9d4be817-dab9-4292-acf8-32416ebe9e94",
 					PersonUUID:       "63ffa4d3-d7cc-4939-9bec-9ed46a78389e",
-					MembershipRoles: []ontology.MembershipRole{
+					MembershipRoles: []transform.MembershipRole{
 						{
 							RoleUUID: "8e8a8be0-be14-4c57-860e-f3ea35d68249",
 						},
@@ -1586,7 +1586,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"f8024a12-2d71-4f0e-996d-bcbc07df3921": {
 				transactionID: "tid_999",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "f8024a12-2d71-4f0e-996d-bcbc07df3921",
 					PrefLabel: "Paris",
 					Authority: "Smartlogic",
@@ -1596,7 +1596,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"900dd202-fccc-3280-b053-d46c234dcbe2": {
 				transactionID: "tid_999_1",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "900dd202-fccc-3280-b053-d46c234dcbe2",
 					PrefLabel: "Paris, Texas",
 					Authority: "TME",
@@ -1606,7 +1606,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"FR_ML_UUID": {
 				transactionID: "tid_112",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "FR_ML_UUID",
 					PrefLabel: "France",
 					Authority: "ManagedLocation",
@@ -1617,7 +1617,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"FR_TME_UUID": {
 				transactionID: "tid_112_1",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "FR_TME_UUID",
 					PrefLabel: "French Republic",
 					Authority: "TME",
@@ -1627,7 +1627,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"BE_SL_UUID": {
 				transactionID: "tid_358",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "BE_SL_UUID",
 					PrefLabel: "Belgium",
 					Authority: "Smartlogic",
@@ -1637,7 +1637,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"BE_ML_UUID": {
 				transactionID: "tid_358_1",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "BE_ML_UUID",
 					PrefLabel: "Kingdom of Belgium",
 					Authority: "ManagedLocation",
@@ -1648,7 +1648,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"BE_TME_UUID": {
 				transactionID: "tid_358_2",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "BE_TME_UUID",
 					PrefLabel: "Royaume de Belgique",
 					Authority: "TME",
@@ -1658,7 +1658,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"IndustryClassification_Smartlogic_UUID": {
 				transactionID: "tid_359",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:               "IndustryClassification_Smartlogic_UUID",
 					PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 					IndustryIdentifier: "5111",
@@ -1669,13 +1669,13 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"Organisation_WithNAICSCodes_Factset_UUID": {
 				transactionID: "tid_735",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "Organisation_WithNAICSCodes_Factset_UUID",
 					Type:      "PublicCompany",
 					Authority: "FACTSET",
 					AuthValue: "000C7F-E",
 					PrefLabel: "Apple, Inc.",
-					NAICSIndustryClassifications: []ontology.NAICSIndustryClassification{
+					NAICSIndustryClassifications: []transform.NAICSIndustryClassification{
 						{
 							UUID: "25c3be2a-15e0-434e-aaa9-ca067e70ae11",
 							Rank: 1,
@@ -1697,7 +1697,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 			"Organisation_WithNAICSCodes_Smartlogic_UUID": {
 				transactionID: "tid_736",
-				concept: ontology.OldConcept{
+				concept: transform.OldConcept{
 					UUID:      "Organisation_WithNAICSCodes_Smartlogic_UUID",
 					Type:      "PublicCompany",
 					Authority: "Smartlogic",

@@ -19,6 +19,7 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
@@ -40,7 +41,7 @@ var irregularConceptTypePaths = map[string]string{
 type Service interface {
 	ListenForNotifications(ctx context.Context, workerID int)
 	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error)
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldConcordedConcept, string, error)
 	Healthchecks() []fthealth.Check
 }
 
@@ -337,9 +338,9 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldConcordedConcept, string, error) {
 	type concordedData struct {
-		Concept       ontology.OldConcordedConcept
+		Concept       transform.OldConcordedConcept
 		TransactionID string
 		Err           error
 	}
@@ -353,25 +354,25 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	case data := <-ch:
 		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return ontology.OldConcordedConcept{}, "", ctx.Err()
+		return transform.OldConcordedConcept{}, "", ctx.Err()
 	}
 }
 
 // nolint: gocognit // TODO: fix 'cognitive complexity 21 of func `(*AggregateService).getConcordedConcept` is high (> 20) (gocognit)'
-func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.OldConcordedConcept, string, error) {
+func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldConcordedConcept, string, error) {
 	var transactionID string
 	var err error
-	oldConcepts := []ontology.OldConcept{}
+	oldConcepts := []transform.OldConcept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
-		return ontology.OldConcordedConcept{}, "", err
+		return transform.OldConcordedConcept{}, "", err
 	}
 	logger.WithField("UUID", UUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
-		return ontology.OldConcordedConcept{}, "", err
+		return transform.OldConcordedConcept{}, "", err
 	}
 
 	// Get all concepts from S3
@@ -381,10 +382,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept ontology.OldConcept
+			var sourceConcept transform.OldConcept
 			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
-				return ontology.OldConcordedConcept{}, "", err
+				return transform.OldConcordedConcept{}, "", err
 			}
 
 			if !found {
@@ -399,17 +400,17 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 
 		}
 	}
-	var primaryOldConcept ontology.OldConcept
+	var primaryOldConcept transform.OldConcept
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
 		foundPrimary, primaryOldConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
-			return ontology.OldConcordedConcept{}, "", err
+			return transform.OldConcordedConcept{}, "", err
 		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
-			return ontology.OldConcordedConcept{}, "", err
+			return transform.OldConcordedConcept{}, "", err
 		}
 	}
 
@@ -421,33 +422,33 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			// sanity check. concordances gathering should return 404 if there are no sources.
 			// we don't return an error in order to keep the same behavior as in v1.23 of the service.
 			logger.WithTransactionID(transactionID).WithUUID(UUID).Error("no sources found")
-			return ontology.OldConcordedConcept{}, "", nil
+			return transform.OldConcordedConcept{}, "", nil
 		}
 		// set the primary concept to the last source concept to keep the behaviour the same as in v1.23
 		primaryOldConcept = oldConcepts[sourceCount-1]
 		oldConcepts = oldConcepts[:sourceCount-1]
 	}
 
-	primaryConcept, err := primaryOldConcept.ToSourceConcept()
+	primaryConcept, err := transform.ToNewSourceConcept(primaryOldConcept)
 	if err != nil {
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(primaryOldConcept.UUID).Error("failed to transform primary concept to new format")
-		return ontology.OldConcordedConcept{}, "", err
+		return transform.OldConcordedConcept{}, "", err
 	}
 
 	var sources []ontology.SourceConcept
 	for _, old := range oldConcepts {
-		sourceConcept, err := old.ToSourceConcept() //nolint: govet // we don't care that err is shadow
+		sourceConcept, err := transform.ToNewSourceConcept(old) //nolint: govet // we don't care that err is shadow
 		if err != nil {
 			logger.WithError(err).WithTransactionID(transactionID).WithUUID(old.UUID).Error("failed to transform concept to new format")
-			return ontology.OldConcordedConcept{}, "", err
+			return transform.OldConcordedConcept{}, "", err
 		}
 		sources = append(sources, sourceConcept)
 	}
 	concordedConcept := ontology.CreateAggregateConcept(primaryConcept, sources)
-	oldConcorded, err := concordedConcept.ToOldConcordedConcept()
+	oldConcorded, err := transform.ToOldAggregateConcept(concordedConcept)
 	if err != nil {
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")
-		return ontology.OldConcordedConcept{}, "", err
+		return transform.OldConcordedConcept{}, "", err
 	}
 
 	return oldConcorded, transactionID, nil
@@ -514,7 +515,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.OldConcordedConcept, tid string) (sqs.ConceptChanges, error) {
+func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept transform.OldConcordedConcept, tid string) (sqs.ConceptChanges, error) {
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
@@ -665,7 +666,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept ontology.OldConcordedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept transform.OldConcordedConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false

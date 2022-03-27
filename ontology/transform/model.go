@@ -1,4 +1,4 @@
-package ontology
+package transform
 
 type MembershipRole struct {
 	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
