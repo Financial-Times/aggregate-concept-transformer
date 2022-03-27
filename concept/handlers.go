@@ -54,9 +54,9 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(concept)
 }
 
-func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (transform.OldConcordedConcept, string, error) {
+func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (transform.OldAggregatedConcept, string, error) {
 	type concordedTransaction struct {
-		Concept       transform.OldConcordedConcept
+		Concept       transform.OldAggregatedConcept
 		TransactionID string
 		Err           error
 	}

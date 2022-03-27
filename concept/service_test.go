@@ -164,7 +164,7 @@ func TestAggregateService_GetConcordedConcept_CancelContext(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_Location(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "f8024a12-2d71-4f0e-996d-bcbc07df3921",
 		PrefLabel: "Paris",
 		Type:      "Location",
@@ -197,7 +197,7 @@ func TestAggregateService_GetConcordedConcept_Location(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "FR_ML_UUID",
 		PrefLabel: "France",
 		Type:      "Location",
@@ -233,7 +233,7 @@ func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.
 
 func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "BE_SL_UUID",
 		PrefLabel: "Belgium",
 		Type:      "Location",
@@ -284,7 +284,7 @@ func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaff9",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -355,7 +355,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf10",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -427,7 +427,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 
 func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf11",
 		PrefLabel:       "Root Concept",
 		Type:            "Person",
@@ -497,7 +497,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_ConceptWithRelationships(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:       "781bb463-dc53-4d3e-9d49-c48dc4cf6d55",
 		PrefLabel:      "Test FT Brand",
 		Type:           "Brand",
@@ -535,7 +535,7 @@ func TestAggregateService_GetConcordedConcept_ConceptWithRelationships(t *testin
 
 func TestAggregateService_GetConcordedConcept_FinancialInstrument(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:     "6562674e-dbfa-4cb0-85b2-41b0948b7cc2",
 		PrefLabel:    "Some random financial instrument",
 		Type:         "FinancialInstrument",
@@ -566,7 +566,7 @@ func TestAggregateService_GetConcordedConcept_FinancialInstrument(t *testing.T) 
 
 func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:   "c28fa0b4-4245-11e8-842f-0ed5f89f718b",
 		Type:       "PublicCompany",
 		ProperName: "Strix Group Plc",
@@ -640,7 +640,7 @@ func TestAggregateService_GetConcordedConcept_Organisation(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:   "a141f50f-31d7-4f89-8143-eec971e54ba8",
 		Type:       "PublicCompany",
 		ProperName: "Strix Group Plc",
@@ -722,7 +722,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "Organisation_WithNAICSCodes_Smartlogic_UUID",
 		Type:      "PublicCompany",
 		PrefLabel: "Apple, Inc.",
@@ -794,7 +794,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *te
 
 func TestAggregateService_GetConcordedConcept_BoardRole(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "344fdb1d-0585-31f7-814f-b478e54dbe1f",
 		PrefLabel: "Director/Board Member",
 		Type:      "BoardRole",
@@ -820,7 +820,7 @@ func TestAggregateService_GetConcordedConcept_BoardRole(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_LoneTME(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "99309d51-8969-4a1e-8346-d51f1981479b",
 		PrefLabel: "Lone TME Concept",
 		Type:      "Person",
@@ -846,7 +846,7 @@ func TestAggregateService_GetConcordedConcept_LoneTME(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:         "87cda39a-e354-3dfb-b28a-b9a04887577b",
 		PrefLabel:        "Independent Non-Executive Director",
 		Type:             "Membership",
@@ -906,7 +906,7 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 
 func TestAggregateService_GetConcordedConcept_IndustryClassification(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	expectedConcept := transform.OldConcordedConcept{
+	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:           "IndustryClassification_Smartlogic_UUID",
 		PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 		Type:               "NAICSIndustryClassification",
@@ -1150,7 +1150,7 @@ func TestAggregateService_ProcessMessage_S3SourceNotFoundStillWrittenAsThing(t *
 	mockWriter := svc.httpClient.(*mockHTTPClient)
 	actualBody, err := ioutil.ReadAll(mockWriter.capturedBody)
 	assert.NoError(t, err)
-	expectedConcordedConcept := transform.OldConcordedConcept{
+	expectedConcordedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  testUUID,
 		PrefLabel: "TME Concept",
 		Type:      "Person",
