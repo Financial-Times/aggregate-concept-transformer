@@ -2,7 +2,6 @@ package ontology
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"math"
 
@@ -44,9 +43,6 @@ type Config struct {
 	// MergingStrategies contains the explicitly specified merging strategies
 	MergingStrategies map[string]MergingStrategy `yaml:"-"`
 }
-
-var ErrUnknownProperty = errors.New("unknown concept property")
-var ErrInvalidPropertyValue = errors.New("invalid property value")
 
 func (cfg Config) ValidateProperties(props map[string]interface{}) error {
 	for propName, propVal := range props {
