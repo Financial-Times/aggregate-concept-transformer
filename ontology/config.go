@@ -26,11 +26,11 @@ type PropertyConfig struct {
 }
 
 type RelationshipConfig struct {
-	ConceptField    string   `yaml:"conceptField"`
-	OneToOne        bool     `yaml:"oneToOne"`
-	NeoCreate       bool     `yaml:"neoCreate"`
-	Properties      []string `yaml:"properties"`
-	ToNodeWithLabel string   `yaml:"toNodeWithLabel"`
+	ConceptField    string            `yaml:"conceptField"`
+	OneToOne        bool              `yaml:"oneToOne"`
+	NeoCreate       bool              `yaml:"neoCreate"`
+	Properties      map[string]string `yaml:"properties"`
+	ToNodeWithLabel string            `yaml:"toNodeWithLabel"`
 
 	Strategy MergingStrategy `yaml:"mergingStrategy"`
 }
