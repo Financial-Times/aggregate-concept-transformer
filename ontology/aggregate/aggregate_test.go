@@ -57,7 +57,7 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 		Sources []ontology.NewConcept
 	}{
 		"Properties": {
-			Primary: ontology.NewConcept{AdditionalSourceFields: ontology.AdditionalSourceFields{Fields: map[string]interface{}{
+			Primary: ontology.NewConcept{AdditionalSourceFields: ontology.AdditionalSourceFields{Properties: map[string]interface{}{
 				"descriptionXML":         "primary description",
 				"_imageUrl":              "primary image",
 				"emailAddress":           "primary emailAddress",
@@ -85,7 +85,7 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 			}},
 			},
 			Sources: []ontology.NewConcept{
-				{AdditionalSourceFields: ontology.AdditionalSourceFields{Fields: map[string]interface{}{
+				{AdditionalSourceFields: ontology.AdditionalSourceFields{Properties: map[string]interface{}{
 					"descriptionXML":         "secondary description",
 					"_imageUrl":              "secondary image",
 					"emailAddress":           "secondary emailAddress",
@@ -121,9 +121,12 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 			sources := test.Sources
 			sources = append(sources, test.Primary)
 			expected := ontology.NewAggregatedConcept{
-				AdditionalConcordedFields: ontology.AdditionalConcordedFields{
-					Fields:                test.Primary.Fields,
+				RequiredConcordedFields: ontology.RequiredConcordedFields{
 					SourceRepresentations: sources,
+				},
+				AdditionalConcordedFields: ontology.AdditionalConcordedFields{
+					Properties:    test.Primary.Properties,
+					Relationships: map[string]interface{}{},
 				},
 			}
 			if !cmp.Equal(expected, actual) {

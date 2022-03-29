@@ -10,15 +10,18 @@ type NewConcept struct {
 }
 
 type RequiredSourceFields struct {
-	UUID      string `json:"uuid,omitempty"`
-	Type      string `json:"type,omitempty"`
-	PrefLabel string `json:"prefLabel,omitempty"`
-	Authority string `json:"authority,omitempty"`
-	AuthValue string `json:"authorityValue,omitempty"`
+	UUID              string `json:"uuid"`
+	Type              string `json:"type"`
+	PrefLabel         string `json:"prefLabel"`
+	Authority         string `json:"authority"`
+	AuthorityValue    string `json:"authorityValue"`
+	LastModifiedEpoch int    `json:"lastModifiedEpoch,omitempty"`
+	Hash              string `json:"hash,omitempty"`
 }
 
 type AdditionalSourceFields struct {
-	Fields map[string]interface{} `json:"-"`
+	Properties    map[string]interface{} `json:"-"`
+	Relationships map[string]interface{} `json:"-"`
 	// Additional fields
 	Aliases   []string `json:"aliases,omitempty"`
 	ScopeNote string   `json:"scopeNote,omitempty"`
@@ -40,13 +43,21 @@ func (sc *NewConcept) MarshalJSON() ([]byte, error) {
 	}
 	result := map[string]interface{}{}
 	// TODO: ensure that fields are not overlapping
-	for key, val := range sc.Fields {
+	for key, val := range sc.Properties {
 		// serialize only fields defined in the config
-		if !GetConfig().HasProperty(key) && !GetConfig().HasRelationship(key) {
+		if !GetConfig().HasProperty(key) {
 			continue
 		}
 		result[key] = val
 	}
+
+	for key, val := range sc.Relationships {
+		if !GetConfig().HasRelationship(key) {
+			continue
+		}
+		result[key] = val
+	}
+
 	for key, val := range add {
 		result[key] = val
 	}
@@ -70,20 +81,21 @@ func (sc *NewConcept) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	sc.Fields = map[string]interface{}{}
+	sc.Properties = map[string]interface{}{}
+	sc.Relationships = map[string]interface{}{}
 	for key := range GetConfig().Properties {
 		val, has := fields[key]
 		if !has {
 			continue
 		}
-		sc.Fields[key] = val
+		sc.Properties[key] = val
 	}
 	for _, rel := range GetConfig().Relationships {
 		val, has := fields[rel.ConceptField]
 		if !has {
 			continue
 		}
-		sc.Fields[rel.ConceptField] = val
+		sc.Relationships[rel.ConceptField] = val
 	}
 	return nil
 }
