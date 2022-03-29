@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
@@ -41,12 +43,7 @@ func TestCreateAggregateConcept(t *testing.T) {
 			expected := readAggregateFixture(t, test.Aggregate)
 			primary := sources[len(sources)-1]
 			actual := CreateAggregateConcept(primary, sources[:len(sources)-1])
-			sortAliases(&expected)
-			sortAliases(&actual)
-			if !cmp.Equal(expected, actual) {
-				diff := cmp.Diff(expected, actual)
-				t.Fatal(diff)
-			}
+			compareAggregateConcepts(t, expected, actual)
 		})
 	}
 }
@@ -125,14 +122,10 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 					SourceRepresentations: sources,
 				},
 				AdditionalConcordedFields: ontology.AdditionalConcordedFields{
-					Properties:    test.Primary.Properties,
-					Relationships: map[string]interface{}{},
+					Properties: test.Primary.Properties,
 				},
 			}
-			if !cmp.Equal(expected, actual) {
-				diff := cmp.Diff(expected, actual)
-				t.Fatal(diff)
-			}
+			compareAggregateConcepts(t, expected, actual)
 		})
 	}
 }
@@ -159,6 +152,7 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 		"relOverride": {
 			ConceptField: "relOverride",
 			Strategy:     ontology.OverwriteStrategy,
+			OneToOne:     true,
 		},
 		"relAggregate": {
 			ConceptField: "relAggregate",
@@ -171,10 +165,20 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	expected := readAggregateFixture(t, test.Aggregate)
 	primary := sources[len(sources)-1]
 	actual := CreateAggregateConcept(primary, sources[:len(sources)-1])
+	compareAggregateConcepts(t, expected, actual)
+}
+
+func compareAggregateConcepts(t *testing.T, expected, actual ontology.NewAggregatedConcept) {
+	t.Helper()
 	sortAliases(&expected)
 	sortAliases(&actual)
-	if !cmp.Equal(expected, actual) {
-		diff := cmp.Diff(expected, actual)
+	opts := cmp.Options{
+		cmpopts.SortSlices(func(l, r ontology.Relationship) bool {
+			return strings.Compare(l.Label, r.Label) > 0
+		}),
+	}
+	if !cmp.Equal(expected, actual, opts) {
+		diff := cmp.Diff(expected, actual, opts)
 		t.Fatal(diff)
 	}
 }

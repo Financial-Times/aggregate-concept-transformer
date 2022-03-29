@@ -22,7 +22,7 @@ type RequiredConcordedFields struct {
 
 type AdditionalConcordedFields struct {
 	Properties    map[string]interface{} `json:"-"`
-	Relationships map[string]interface{} `json:"-"`
+	Relationships Relationships          `json:"-"`
 	// Additional fields
 	Aliases   []string `json:"aliases,omitempty"`
 	ScopeNote string   `json:"scopeNote,omitempty"`
@@ -42,6 +42,10 @@ func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	rels, err := mappify(&cc.Relationships)
+	if err != nil {
+		return nil, err
+	}
 	result := map[string]interface{}{}
 	// TODO: ensure that fields are not overlapping
 	for key, val := range cc.Properties {
@@ -51,10 +55,7 @@ func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 		}
 		result[key] = val
 	}
-	for key, val := range cc.Relationships {
-		if !GetConfig().HasRelationship(key) {
-			continue
-		}
+	for key, val := range rels {
 		result[key] = val
 	}
 	for key, val := range add {
@@ -75,27 +76,22 @@ func (cc *NewAggregatedConcept) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
+	err = json.Unmarshal(bytes, &cc.Relationships)
+	if err != nil {
+		return err
+	}
 	fields := map[string]interface{}{}
 	err = json.Unmarshal(bytes, &fields)
 	if err != nil {
 		return err
 	}
 	cc.Properties = map[string]interface{}{}
-	cc.Relationships = map[string]interface{}{}
 	for key := range GetConfig().Properties {
 		val, has := fields[key]
 		if !has {
 			continue
 		}
 		cc.Properties[key] = val
-	}
-
-	for _, rel := range GetConfig().Relationships {
-		val, has := fields[rel.ConceptField]
-		if !has {
-			continue
-		}
-		cc.Relationships[rel.ConceptField] = val
 	}
 	return nil
 }

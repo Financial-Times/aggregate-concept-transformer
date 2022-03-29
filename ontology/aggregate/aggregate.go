@@ -15,8 +15,7 @@ import (
 func CreateAggregateConcept(primary ontology.NewConcept, others []ontology.NewConcept) ontology.NewAggregatedConcept {
 	var scopeNoteOptions = map[string][]string{}
 	concordedConcept := ontology.NewAggregatedConcept{}
-	concordedConcept.Properties = map[string]interface{}{}    // initialise Properties to be able to safely access it later
-	concordedConcept.Relationships = map[string]interface{}{} // initialise Properties to be able to safely access it later
+	concordedConcept.Properties = map[string]interface{}{} // initialise Properties to be able to safely access it later
 	for _, src := range others {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
@@ -106,16 +105,26 @@ func mergeCanonicalInformation(c ontology.NewAggregatedConcept, s ontology.NewCo
 		}
 		c.Properties[key] = val
 	}
-	for key, val := range s.Relationships {
-		switch ontology.GetConfig().MergingStrategies[key] {
+	for _, rel := range s.Relationships {
+		cfg, ok := ontology.GetConfig().Relationships[rel.Label]
+		if !ok {
+			continue
+		}
+		switch cfg.Strategy {
 		case ontology.OverwriteStrategy:
-			c.Relationships[key] = val
-		case ontology.AggregateStrategy:
-			if _, has := c.Relationships[key]; !has {
-				c.Relationships[key] = []interface{}{}
+			found := false
+			for idx, r := range c.Relationships {
+				if rel.Label == r.Label {
+					c.Relationships[idx] = rel
+					found = true
+					break
+				}
 			}
-			// TODO: test casting
-			c.Relationships[key] = append(c.Relationships[key].([]interface{}), val.([]interface{})...)
+			if !found {
+				c.Relationships = append(c.Relationships, rel)
+			}
+		case ontology.AggregateStrategy:
+			c.Relationships = append(c.Relationships, rel)
 		}
 	}
 
