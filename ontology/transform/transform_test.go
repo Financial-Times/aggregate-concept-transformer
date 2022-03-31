@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
@@ -31,9 +33,13 @@ func TestToNewSourceConcept(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if !cmp.Equal(source, sourceTransfomed) {
-		diff := cmp.Diff(source, sourceTransfomed)
+	opts := cmp.Options{
+		cmpopts.SortSlices(func(l, r ontology.Relationship) bool {
+			return strings.Compare(l.Label, r.Label) > 0
+		}),
+	}
+	if !cmp.Equal(source, sourceTransfomed, opts) {
+		diff := cmp.Diff(source, sourceTransfomed, opts)
 		t.Fatal(diff)
 	}
 }

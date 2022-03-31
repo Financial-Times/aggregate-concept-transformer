@@ -115,6 +115,13 @@ func (cfg Config) IsPropValueValid(propName string, val interface{}) bool {
 	}
 }
 
+func (cfg Config) GetRelationshipUUIDKey(label string) string {
+	if label == "HAS_ROLE" {
+		return "membershipRoleUUID"
+	}
+	return "uuid"
+}
+
 var config Config
 
 //go:embed config.yaml
