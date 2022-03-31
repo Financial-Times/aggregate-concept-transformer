@@ -1,24 +1,22 @@
-package ontology
+package aggregate
 
 import (
 	"strings"
+
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
-const (
-	SmartlogicAuthority      = "Smartlogic"
-	ManagedLocationAuthority = "ManagedLocation"
-)
-
-// CreateAggregateConcept creates ConcordedConcept by merging properties and relationships from primary and others SourceConcept
-// When merging the data from the primary SourceConcept takes precedent.
-// So if a property is present in both "primary" and one or more "other" SourceConcept,
-// the data from the primary will be in the ConcordedConcept
+// CreateAggregateConcept creates NewAggregatedConcept by merging properties and relationships from primary and others NewConcept
+// When merging the data from the primary NewConcept takes precedent.
+// So if a property is present in both "primary" and one or more "other" NewConcept,
+// the data from the primary will be in the NewAggregatedConcept
 // Exception to this rule are relationships that are with MergingStrategy: AggregateStrategy.
-// Those relationships will be collected from both primary and others SourceConcept into ConcordedConcept
-func CreateAggregateConcept(primary SourceConcept, others []SourceConcept) ConcordedConcept {
+// Those relationships will be collected from both primary and others NewConcept into NewAggregatedConcept
+func CreateAggregateConcept(primary ontology.NewConcept, others []ontology.NewConcept) ontology.NewAggregatedConcept {
 	var scopeNoteOptions = map[string][]string{}
-	concordedConcept := ConcordedConcept{}
-	concordedConcept.Fields = map[string]interface{}{} // initialise Fields to be able to safely access it later
+	concordedConcept := ontology.NewAggregatedConcept{}
+	concordedConcept.Properties = map[string]interface{}{}    // initialise Properties to be able to safely access it later
+	concordedConcept.Relationships = map[string]interface{}{} // initialise Properties to be able to safely access it later
 	for _, src := range others {
 		concordedConcept = mergeCanonicalInformation(concordedConcept, src, scopeNoteOptions)
 	}
@@ -29,8 +27,8 @@ func CreateAggregateConcept(primary SourceConcept, others []SourceConcept) Conco
 	return concordedConcept
 }
 
-func chooseScopeNote(concept ConcordedConcept, scopeNoteOptions map[string][]string) string {
-	if sn, ok := scopeNoteOptions[SmartlogicAuthority]; ok {
+func chooseScopeNote(concept ontology.NewAggregatedConcept, scopeNoteOptions map[string][]string) string {
+	if sn, ok := scopeNoteOptions[ontology.SmartlogicAuthority]; ok {
 		return strings.Join(removeMatchingEntries(sn, concept.PrefLabel), " | ")
 	}
 	if sn, ok := scopeNoteOptions["Wikidata"]; ok {
@@ -82,7 +80,7 @@ func getMoreSpecificType(existingType string, newType string) string {
 	return newType
 }
 
-func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
+func buildScopeNoteOptions(scopeNotes map[string][]string, s ontology.NewConcept) {
 	var newScopeNote string
 	if s.Authority == "TME" {
 		newScopeNote = s.PrefLabel
@@ -95,28 +93,29 @@ func buildScopeNoteOptions(scopeNotes map[string][]string, s SourceConcept) {
 }
 
 // nolint:gocognit // in the process of simplifying this function
-func mergeCanonicalInformation(c ConcordedConcept, s SourceConcept, scopeNoteOptions map[string][]string) ConcordedConcept {
+func mergeCanonicalInformation(c ontology.NewAggregatedConcept, s ontology.NewConcept, scopeNoteOptions map[string][]string) ontology.NewAggregatedConcept {
 	c.PrefUUID = s.UUID
 	c.PrefLabel = s.PrefLabel
 	c.Type = getMoreSpecificType(c.Type, s.Type)
 	c.Aliases = append(c.Aliases, s.Aliases...)
 	c.Aliases = append(c.Aliases, s.PrefLabel)
 
-	for key, val := range s.Fields {
-		if GetConfig().HasProperty(key) {
-			c.Fields[key] = val
+	for key, val := range s.Properties {
+		if !ontology.GetConfig().HasProperty(key) {
 			continue
 		}
-
-		switch GetConfig().MergingStrategies[key] {
-		case OverwriteStrategy:
-			c.Fields[key] = val
-		case AggregateStrategy:
-			if _, has := c.Fields[key]; !has {
-				c.Fields[key] = []interface{}{}
+		c.Properties[key] = val
+	}
+	for key, val := range s.Relationships {
+		switch ontology.GetConfig().MergingStrategies[key] {
+		case ontology.OverwriteStrategy:
+			c.Relationships[key] = val
+		case ontology.AggregateStrategy:
+			if _, has := c.Relationships[key]; !has {
+				c.Relationships[key] = []interface{}{}
 			}
 			// TODO: test casting
-			c.Fields[key] = append(c.Fields[key].([]interface{}), val.([]interface{})...)
+			c.Relationships[key] = append(c.Relationships[key].([]interface{}), val.([]interface{})...)
 		}
 	}
 

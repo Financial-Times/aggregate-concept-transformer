@@ -1,4 +1,4 @@
-package ontology
+package transform
 
 type MembershipRole struct {
 	RoleUUID        string `json:"membershipRoleUUID,omitempty"`
@@ -11,8 +11,8 @@ type NAICSIndustryClassification struct {
 	Rank int    `json:"rank,omitempty"`
 }
 
-// OldConcordedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
-type OldConcordedConcept struct {
+// OldAggregatedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
+type OldAggregatedConcept struct {
 	// Required fields
 	PrefUUID  string `json:"prefUUID,omitempty"`
 	PrefLabel string `json:"prefLabel,omitempty"`

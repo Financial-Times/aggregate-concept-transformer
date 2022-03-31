@@ -108,6 +108,9 @@ relationships:
   HAS_ROLE: # NB: currently not in concepts-rw-neo4j
     conceptField: "membershipRoles"
     mergingStrategy: "aggregate"
+    properties:
+      inceptionDate: date
+      terminationDate: date
   # Organisation
   COUNTRY_OF_RISK:
     conceptField: "countryOfRiskUUID"
@@ -128,4 +131,6 @@ relationships:
   HAS_INDUSTRY_CLASSIFICATION:
     conceptField: "naicsIndustryClassifications"
     mergingStrategy: "aggregate"
+    properties:
+      rank: int
 authorities:

@@ -2,11 +2,15 @@ package ontology
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"math"
 
 	"gopkg.in/yaml.v2"
+)
+
+const (
+	SmartlogicAuthority      = "Smartlogic"
+	ManagedLocationAuthority = "ManagedLocation"
 )
 
 type MergingStrategy string
@@ -22,11 +26,11 @@ type PropertyConfig struct {
 }
 
 type RelationshipConfig struct {
-	ConceptField    string   `yaml:"conceptField"`
-	OneToOne        bool     `yaml:"oneToOne"`
-	NeoCreate       bool     `yaml:"neoCreate"`
-	Properties      []string `yaml:"properties"`
-	ToNodeWithLabel string   `yaml:"toNodeWithLabel"`
+	ConceptField    string            `yaml:"conceptField"`
+	OneToOne        bool              `yaml:"oneToOne"`
+	NeoCreate       bool              `yaml:"neoCreate"`
+	Properties      map[string]string `yaml:"properties"`
+	ToNodeWithLabel string            `yaml:"toNodeWithLabel"`
 
 	Strategy MergingStrategy `yaml:"mergingStrategy"`
 }
@@ -39,9 +43,6 @@ type Config struct {
 	// MergingStrategies contains the explicitly specified merging strategies
 	MergingStrategies map[string]MergingStrategy `yaml:"-"`
 }
-
-var ErrUnknownProperty = errors.New("unknown concept property")
-var ErrInvalidPropertyValue = errors.New("invalid property value")
 
 func (cfg Config) ValidateProperties(props map[string]interface{}) error {
 	for propName, propVal := range props {
@@ -137,7 +138,7 @@ func GetConfig() Config {
 	return config
 }
 
-func setGlobalConfig(cfg Config) {
+func SetGlobalConfig(cfg Config) {
 	config = cfg
 	initConfig(&config)
 }

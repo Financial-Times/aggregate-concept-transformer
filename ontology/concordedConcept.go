@@ -4,21 +4,25 @@ import (
 	"encoding/json"
 )
 
-// ConcordedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
-type ConcordedConcept struct {
+// NewAggregatedConcept is the model of the aggregated concept that is send for storage in the knowledge graph.
+type NewAggregatedConcept struct {
 	RequiredConcordedFields
 	AdditionalConcordedFields
 }
 
 type RequiredConcordedFields struct {
 	// Required fields
-	PrefUUID  string `json:"prefUUID,omitempty"`
-	PrefLabel string `json:"prefLabel,omitempty"`
-	Type      string `json:"type,omitempty"`
+	PrefUUID       string `json:"prefUUID"`
+	PrefLabel      string `json:"prefLabel"`
+	Type           string `json:"type"`
+	AggregatedHash string `json:"aggregateHash,omitempty"`
+	// Source representations
+	SourceRepresentations []NewConcept `json:"sourceRepresentations"`
 }
 
 type AdditionalConcordedFields struct {
-	Fields map[string]interface{} `json:"-"`
+	Properties    map[string]interface{} `json:"-"`
+	Relationships map[string]interface{} `json:"-"`
 	// Additional fields
 	Aliases   []string `json:"aliases,omitempty"`
 	ScopeNote string   `json:"scopeNote,omitempty"`
@@ -27,11 +31,9 @@ type AdditionalConcordedFields struct {
 	IssuedBy string `json:"issuedBy,omitempty"`
 	// Organisation
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
-	// Source representations
-	SourceRepresentations []SourceConcept `json:"sourceRepresentations,omitempty"`
 }
 
-func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
+func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(cc.RequiredConcordedFields)
 	if err != nil {
 		return nil, err
@@ -42,9 +44,15 @@ func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
 	}
 	result := map[string]interface{}{}
 	// TODO: ensure that fields are not overlapping
-	for key, val := range cc.Fields {
+	for key, val := range cc.Properties {
 		// serialize only fields defined in the config
-		if !GetConfig().HasProperty(key) && !GetConfig().HasRelationship(key) {
+		if !GetConfig().HasProperty(key) {
+			continue
+		}
+		result[key] = val
+	}
+	for key, val := range cc.Relationships {
+		if !GetConfig().HasRelationship(key) {
 			continue
 		}
 		result[key] = val
@@ -58,7 +66,7 @@ func (cc *ConcordedConcept) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result)
 }
 
-func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
+func (cc *NewAggregatedConcept) UnmarshalJSON(bytes []byte) error {
 	err := json.Unmarshal(bytes, &cc.RequiredConcordedFields)
 	if err != nil {
 		return err
@@ -72,13 +80,14 @@ func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	cc.Fields = map[string]interface{}{}
+	cc.Properties = map[string]interface{}{}
+	cc.Relationships = map[string]interface{}{}
 	for key := range GetConfig().Properties {
 		val, has := fields[key]
 		if !has {
 			continue
 		}
-		cc.Fields[key] = val
+		cc.Properties[key] = val
 	}
 
 	for _, rel := range GetConfig().Relationships {
@@ -86,7 +95,7 @@ func (cc *ConcordedConcept) UnmarshalJSON(bytes []byte) error {
 		if !has {
 			continue
 		}
-		cc.Fields[rel.ConceptField] = val
+		cc.Relationships[rel.ConceptField] = val
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package ontology
+package aggregate
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 func TestCreateAggregateConcept(t *testing.T) {
@@ -51,11 +53,11 @@ func TestCreateAggregateConcept(t *testing.T) {
 
 func TestCreateAggregateConcept_Properties(t *testing.T) {
 	tests := map[string]struct {
-		Primary SourceConcept
-		Sources []SourceConcept
+		Primary ontology.NewConcept
+		Sources []ontology.NewConcept
 	}{
 		"Properties": {
-			Primary: SourceConcept{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+			Primary: ontology.NewConcept{AdditionalSourceFields: ontology.AdditionalSourceFields{Properties: map[string]interface{}{
 				"descriptionXML":         "primary description",
 				"_imageUrl":              "primary image",
 				"emailAddress":           "primary emailAddress",
@@ -82,8 +84,8 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 				"industryIdentifier":     "primary industryIdentifier",
 			}},
 			},
-			Sources: []SourceConcept{
-				{AdditionalSourceFields: AdditionalSourceFields{Fields: map[string]interface{}{
+			Sources: []ontology.NewConcept{
+				{AdditionalSourceFields: ontology.AdditionalSourceFields{Properties: map[string]interface{}{
 					"descriptionXML":         "secondary description",
 					"_imageUrl":              "secondary image",
 					"emailAddress":           "secondary emailAddress",
@@ -118,10 +120,13 @@ func TestCreateAggregateConcept_Properties(t *testing.T) {
 			actual := CreateAggregateConcept(test.Primary, test.Sources)
 			sources := test.Sources
 			sources = append(sources, test.Primary)
-			expected := ConcordedConcept{
-				AdditionalConcordedFields: AdditionalConcordedFields{
-					Fields:                test.Primary.Fields,
+			expected := ontology.NewAggregatedConcept{
+				RequiredConcordedFields: ontology.RequiredConcordedFields{
 					SourceRepresentations: sources,
+				},
+				AdditionalConcordedFields: ontology.AdditionalConcordedFields{
+					Properties:    test.Primary.Properties,
+					Relationships: map[string]interface{}{},
 				},
 			}
 			if !cmp.Equal(expected, actual) {
@@ -143,24 +148,24 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	}
 
 	// backup config before modifying it.
-	backup := GetConfig()
-	defer setGlobalConfig(backup)
+	backup := ontology.GetConfig()
+	defer ontology.SetGlobalConfig(backup)
 
 	cfg := backup
-	cfg.Properties = map[string]PropertyConfig{
+	cfg.Properties = map[string]ontology.PropertyConfig{
 		"test": {NeoProp: "test"},
 	}
-	cfg.Relationships = map[string]RelationshipConfig{
+	cfg.Relationships = map[string]ontology.RelationshipConfig{
 		"relOverride": {
 			ConceptField: "relOverride",
-			Strategy:     OverwriteStrategy,
+			Strategy:     ontology.OverwriteStrategy,
 		},
 		"relAggregate": {
 			ConceptField: "relAggregate",
-			Strategy:     AggregateStrategy,
+			Strategy:     ontology.AggregateStrategy,
 		},
 	}
-	setGlobalConfig(cfg)
+	ontology.SetGlobalConfig(cfg)
 
 	sources := readSourcesFixture(t, test.Sources)
 	expected := readAggregateFixture(t, test.Aggregate)
@@ -174,21 +179,21 @@ func TestCreateAggregateConcept_WithDummyConfig(t *testing.T) {
 	}
 }
 
-func sortAliases(concorded *ConcordedConcept) {
+func sortAliases(concorded *ontology.NewAggregatedConcept) {
 	sort.Strings(concorded.Aliases)
 	for idx := 0; idx < len(concorded.SourceRepresentations); idx++ {
 		sort.Strings(concorded.SourceRepresentations[idx].Aliases)
 	}
 }
 
-func readSourcesFixture(t *testing.T, fixture string) []SourceConcept {
+func readSourcesFixture(t *testing.T, fixture string) []ontology.NewConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := []SourceConcept{}
+	result := []ontology.NewConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -196,14 +201,14 @@ func readSourcesFixture(t *testing.T, fixture string) []SourceConcept {
 	return result
 }
 
-func readAggregateFixture(t *testing.T, fixture string) ConcordedConcept {
+func readAggregateFixture(t *testing.T, fixture string) ontology.NewAggregatedConcept {
 	t.Helper()
 	f, err := os.Open(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	result := ConcordedConcept{}
+	result := ontology.NewAggregatedConcept{}
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
