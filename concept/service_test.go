@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
@@ -1130,7 +1130,8 @@ func TestAggregateService_ProcessMessage_S3SourceNotFoundStillWrittenAsThing(t *
 	err := svc.ProcessMessage(context.Background(), testUUID, "")
 	assert.NoError(t, err)
 	mockWriter := svc.httpClient.(*mockHTTPClient)
-	actualBody, err := ioutil.ReadAll(mockWriter.capturedBody)
+	actual := transform.OldAggregatedConcept{}
+	err = json.NewDecoder(mockWriter.capturedBody).Decode(&actual)
 	assert.NoError(t, err)
 	expectedConcordedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  testUUID,
@@ -1152,8 +1153,11 @@ func TestAggregateService_ProcessMessage_S3SourceNotFoundStillWrittenAsThing(t *
 			},
 		},
 	}
-	expectedBody, _ := json.Marshal(expectedConcordedConcept)
-	assert.Equal(t, expectedBody, actualBody)
+
+	if !cmp.Equal(expectedConcordedConcept, actual) {
+		diff := cmp.Diff(expectedConcordedConcept, actual)
+		t.Fatal(diff)
+	}
 }
 
 func TestAggregateService_ProcessMessage_S3CanonicalNotFound(t *testing.T) {
