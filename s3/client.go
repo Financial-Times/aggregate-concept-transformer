@@ -12,6 +12,7 @@ import (
 	"github.com/Financial-Times/go-logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -19,8 +20,14 @@ import (
 )
 
 type Client struct {
-	s3         *s3.S3
+	s3         s3API
 	bucketName string
+}
+
+type s3API interface {
+	GetObjectWithContext(ctx aws.Context, input *s3.GetObjectInput, opts ...request.Option) (*s3.GetObjectOutput, error)
+	HeadObjectWithContext(ctx aws.Context, input *s3.HeadObjectInput, opts ...request.Option) (*s3.HeadObjectOutput, error)
+	HeadBucket(input *s3.HeadBucketInput) (*s3.HeadBucketOutput, error)
 }
 
 func NewClient(bucketName string, awsRegion string) (*Client, error) {

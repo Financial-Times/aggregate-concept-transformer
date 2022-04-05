@@ -1,0 +1,35 @@
+{
+  "uuid": "b4ddd5a5-0b6c-4dc2-bb75-3eb40c1b05ed",
+  "type": "PublicCompany",
+  "prefLabel": "The New York Times Co.",
+  "authority": "FACTSET",
+  "authorityValue": "000R9L-E",
+  "aliases": [
+    "The New York Times",
+    "The New York Times Co.",
+    "The New York Times Company"
+  ],
+  "emailAddress": "help@nytimes.com",
+  "countryCode": "US",
+  "countryOfRisk": "US",
+  "countryOfIncorporation": "US",
+  "countryOfOperations": "US",
+  "countryOfRiskUUID": "3e2eb1c1-7ecd-4600-8cbb-c02ba53ced4b",
+  "countryOfIncorporationUUID": "3e2eb1c1-7ecd-4600-8cbb-c02ba53ced4b",
+  "countryOfOperationsUUID": "3e2eb1c1-7ecd-4600-8cbb-c02ba53ced4b",
+  "leiCode": "529900J1WEMMIW7BOH57",
+  "postalCode": "10018",
+  "properName": "The New York Times Co.",
+  "shortName": "The New York Times",
+  "yearFounded": 1851,
+  "naicsIndustryClassifications": [
+    {
+      "uuid": "49da878c-67ce-4343-9a09-a4a767e584a2",
+      "rank": 1
+    },
+    {
+      "uuid": "38ee195d-ebdd-48a9-af4b-c8a322e7b04d",
+      "rank": 2
+    }
+  ]
+}
