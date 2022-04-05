@@ -10,11 +10,11 @@ type NewConcept struct {
 }
 
 type RequiredSourceFields struct {
-	UUID              string `json:"uuid"`
-	Type              string `json:"type"`
-	PrefLabel         string `json:"prefLabel"`
-	Authority         string `json:"authority"`
-	AuthorityValue    string `json:"authorityValue"`
+	UUID              string `json:"uuid,omitempty"`
+	Type              string `json:"type,omitempty"`
+	PrefLabel         string `json:"prefLabel,omitempty"`
+	Authority         string `json:"authority,omitempty"`
+	AuthorityValue    string `json:"authorityValue,omitempty"`
 	LastModifiedEpoch int    `json:"lastModifiedEpoch,omitempty"`
 	Hash              string `json:"hash,omitempty"`
 }
