@@ -1226,9 +1226,16 @@ func TestResolveConceptType(t *testing.T) {
 // `getConceptFromService` - `bookmark` always receives `""` (unparam)
 func getConceptFromService(svc *AggregateService, ctx context.Context, conceptUUID string, bookmark string) (transform.OldAggregatedConcept, string, error) {
 	c, tid, err := svc.GetConcordedConcept(ctx, conceptUUID, bookmark)
-	sort.Strings(c.Aliases)
-	sort.Strings(c.FormerNames)
-	return c, tid, err
+	if err != nil {
+		return transform.OldAggregatedConcept{}, "", err
+	}
+	old, err := transform.ToOldAggregateConcept(c)
+	if err != nil {
+		return transform.OldAggregatedConcept{}, "", err
+	}
+	sort.Strings(old.Aliases)
+	sort.Strings(old.FormerNames)
+	return old, tid, nil
 }
 
 func setupTestService(clientStatusCode int, writerResponse string) (*AggregateService, *mockS3Client, *mockSQSClient, *mockSQSClient, *mockKinesisStreamClient, chan bool, chan struct{}) {

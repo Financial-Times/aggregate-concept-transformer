@@ -20,7 +20,6 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/aggregate"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
@@ -254,14 +253,19 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 
 	//optionally purge other affected concepts
 	if concordedConcept.Type == "FinancialInstrument" {
-		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.SourceRepresentations[0].IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.SourceRepresentations[0].IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
+		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
 		}
 	}
 
 	if concordedConcept.Type == "Membership" {
-		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.PersonUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PersonUUID).Errorf("Concept couldn't be purged from Varnish cache")
+		personUUID, err := getPersonUUIDFromConcept(concordedConcept)
+		if err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).WithError(err).Errorf("Concept couldn't be purged from Varnish cache")
+		}
+		err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{personUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID)
+		if err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(personUUID).Errorf("Concept couldn't be purged from Varnish cache")
 		}
 	}
 
@@ -274,7 +278,7 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	}
 
 	if err = s.eventsSqs.SendEvents(ctx, updateRecord.ChangedRecords); err != nil {
-		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PersonUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
+		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
 		return err
 	}
 
@@ -336,7 +340,7 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error) {
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
 	type concordedData struct {
 		Concept       ontology.NewAggregatedConcept
 		TransactionID string
@@ -350,16 +354,9 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	}()
 	select {
 	case data := <-ch:
-		if data.Err != nil {
-			return transform.OldAggregatedConcept{}, "", data.Err
-		}
-		concept, err := transform.ToOldAggregateConcept(data.Concept)
-		if err != nil {
-			return transform.OldAggregatedConcept{}, "", err
-		}
-		return concept, data.TransactionID, nil
+		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return transform.OldAggregatedConcept{}, "", ctx.Err()
+		return ontology.NewAggregatedConcept{}, "", ctx.Err()
 	}
 }
 
@@ -500,7 +497,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept transform.OldAggregatedConcept, tid string) (sqs.ConceptChanges, error) {
+func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.NewAggregatedConcept, tid string) (sqs.ConceptChanges, error) {
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
@@ -651,7 +648,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept transform.OldAggregatedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept ontology.NewAggregatedConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false
@@ -672,4 +669,15 @@ func isTypeAllowedInElastic(concordedConcept transform.OldAggregatedConcept) boo
 	}
 
 	return true
+}
+
+func getPersonUUIDFromConcept(concept ontology.NewAggregatedConcept) (string, error) {
+	const personRelLabel = "HAS_MEMBER"
+	for _, rel := range concept.Relationships {
+		if rel.Label != personRelLabel {
+			continue
+		}
+		return rel.UUID, nil
+	}
+	return "", errors.New("membership is missing 'HAS_MEMBER' relationship")
 }

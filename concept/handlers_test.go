@@ -14,6 +14,7 @@ import (
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
@@ -158,14 +159,19 @@ func (s *MockService) ProcessMessage(ctx context.Context, UUID string, bookmark 
 	return nil
 }
 
-func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error) {
+func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
 	if s.err != nil {
-		return transform.OldAggregatedConcept{}, "", s.err
+		return ontology.NewAggregatedConcept{}, "", s.err
 	}
-	if c, ok := s.concepts[UUID]; ok {
-		return c, "tid", nil
+	c, ok := s.concepts[UUID]
+	if !ok {
+		return ontology.NewAggregatedConcept{}, "", errors.New("concept not found")
 	}
-	return transform.OldAggregatedConcept{}, "", s.err
+	newConcept, err := transform.ToNewAggregateConcept(c)
+	if err != nil {
+		return ontology.NewAggregatedConcept{}, "", err
+	}
+	return newConcept, "tid", nil
 }
 
 func (s *MockService) Healthchecks() []fthealth.Check {
