@@ -43,7 +43,12 @@ func TestClient_GetConceptAndTransactionID(t *testing.T) {
 		t.Errorf("expect tid %v, got %v", testTID, tid)
 	}
 
-	if !cmp.Equal(expected, concept) {
+	actual, err := transform.ToOldSourceConcept(concept)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp.Equal(expected, actual) {
 		diff := cmp.Diff(expected, concept)
 		t.Errorf("concept mismatch: %s", diff)
 	}

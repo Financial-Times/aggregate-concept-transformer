@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 type Client struct {
@@ -63,7 +63,7 @@ func NewClient(bucketName string, awsRegion string) (*Client, error) {
 	}, err
 }
 
-func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error) {
+func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
 	getObjectParams := &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
 		Key:    aws.String(getKey(UUID)),
@@ -74,10 +74,10 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (b
 		e, ok := err.(awserr.Error)
 		if ok && e.Code() == "NoSuchKey" {
 			// NotFound rather than error, so no logging needed.
-			return false, transform.OldConcept{}, "", nil
+			return false, ontology.NewConcept{}, "", nil
 		}
 		logger.WithError(err).WithUUID(UUID).Error("Error retrieving concept from S3")
-		return false, transform.OldConcept{}, "", err
+		return false, ontology.NewConcept{}, "", err
 	}
 
 	getHeadersParams := &s3.HeadObjectInput{
@@ -87,14 +87,14 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (b
 	ho, err := c.s3.HeadObjectWithContext(ctx, getHeadersParams)
 	if err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot access S3 head object")
-		return false, transform.OldConcept{}, "", err
+		return false, ontology.NewConcept{}, "", err
 	}
 	tid := ho.Metadata["Transaction_id"]
 
-	var concept transform.OldConcept
+	var concept ontology.NewConcept
 	if err = json.NewDecoder(resp.Body).Decode(&concept); err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot unmarshal object into a concept")
-		return true, transform.OldConcept{}, "", err
+		return true, ontology.NewConcept{}, "", err
 	}
 	return true, concept, *tid, nil
 }

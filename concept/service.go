@@ -85,7 +85,7 @@ func (r *systemHealth) processChannel() {
 }
 
 type normalisedClient interface {
-	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error)
+	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error)
 	Healthcheck() fthealth.Check
 }
 
@@ -388,7 +388,8 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		for _, conc := range concordanceRecords {
 			var found bool
 			var sourceConcept transform.OldConcept
-			found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
+			var sourceNewConcept ontology.NewConcept
+			found, sourceNewConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
 				return transform.OldAggregatedConcept{}, "", err
 			}
@@ -400,21 +401,32 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 				sourceConcept.AuthValue = conc.AuthorityValue
 				sourceConcept.UUID = conc.UUID
 				sourceConcept.Type = "Thing"
+			} else {
+				sourceConcept, err = transform.ToOldSourceConcept(sourceNewConcept)
+				if err != nil {
+					return transform.OldAggregatedConcept{}, "", err
+				}
 			}
 			oldConcepts = append(oldConcepts, sourceConcept)
 
 		}
 	}
 	var primaryOldConcept transform.OldConcept
+	var primaryNewConcept ontology.NewConcept
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		foundPrimary, primaryOldConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		foundPrimary, primaryNewConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
 			return transform.OldAggregatedConcept{}, "", err
 		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
+			return transform.OldAggregatedConcept{}, "", err
+		}
+		primaryOldConcept, err = transform.ToOldSourceConcept(primaryNewConcept)
+		if err != nil {
+			logger.WithField("UUID", UUID).WithError(err).Error("failed to transform")
 			return transform.OldAggregatedConcept{}, "", err
 		}
 	}
