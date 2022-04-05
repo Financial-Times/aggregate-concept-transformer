@@ -21,7 +21,6 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/aggregate"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
-	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
@@ -85,8 +84,13 @@ func (r *systemHealth) processChannel() {
 	}
 }
 
+type normalisedClient interface {
+	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error)
+	Healthcheck() fthealth.Check
+}
+
 type AggregateService struct {
-	s3                              s3.Client
+	nStore                          normalisedClient
 	concordances                    concordances.Client
 	conceptUpdatesSqs               sqs.Client
 	eventsSqs                       sqs.Client
@@ -102,7 +106,7 @@ type AggregateService struct {
 }
 
 func NewService(
-	S3Client s3.Client,
+	S3Client normalisedClient,
 	conceptUpdatesSQSClient sqs.Client,
 	eventsSQSClient sqs.Client,
 	concordancesClient concordances.Client,
@@ -126,7 +130,7 @@ func NewService(
 	go health.processChannel()
 
 	return &AggregateService{
-		s3:                              S3Client,
+		nStore:                          S3Client,
 		concordances:                    concordancesClient,
 		conceptUpdatesSqs:               conceptUpdatesSQSClient,
 		eventsSqs:                       eventsSQSClient,
@@ -384,7 +388,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		for _, conc := range concordanceRecords {
 			var found bool
 			var sourceConcept transform.OldConcept
-			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
+			found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
 				return transform.OldAggregatedConcept{}, "", err
 			}
@@ -405,7 +409,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		foundPrimary, primaryOldConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		foundPrimary, primaryOldConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
 			return transform.OldAggregatedConcept{}, "", err
 		} else if !foundPrimary {
@@ -457,7 +461,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 
 func (s *AggregateService) Healthchecks() []fthealth.Check {
 	checks := []fthealth.Check{
-		s.s3.Healthcheck(),
+		s.nStore.Healthcheck(),
 		s.concordances.Healthcheck(),
 	}
 	if !s.readOnly {

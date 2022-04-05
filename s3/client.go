@@ -18,17 +18,12 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 )
 
-type Client interface {
-	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error)
-	Healthcheck() fthealth.Check
-}
-
-type ConceptClient struct {
+type Client struct {
 	s3         *s3.S3
 	bucketName string
 }
 
-func NewClient(bucketName string, awsRegion string) (Client, error) {
+func NewClient(bucketName string, awsRegion string) (*Client, error) {
 	hc := http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -51,17 +46,17 @@ func NewClient(bucketName string, awsRegion string) (Client, error) {
 		})
 	if err != nil {
 		logger.WithError(err).Error("Unable to create an S3 client")
-		return &ConceptClient{}, err
+		return &Client{}, err
 	}
 	client := s3.New(sess)
 
-	return &ConceptClient{
+	return &Client{
 		s3:         client,
 		bucketName: bucketName,
 	}, err
 }
 
-func (c *ConceptClient) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error) {
+func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error) {
 	getObjectParams := &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
 		Key:    aws.String(getKey(UUID)),
@@ -97,7 +92,7 @@ func (c *ConceptClient) GetConceptAndTransactionID(ctx context.Context, UUID str
 	return true, concept, *tid, nil
 }
 
-func (c *ConceptClient) Healthcheck() fthealth.Check {
+func (c *Client) Healthcheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "Editorial updates of concepts will not be written into UPP",
 		Name:             "Check connectivity to S3 bucket",
