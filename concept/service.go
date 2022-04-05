@@ -38,13 +38,6 @@ var irregularConceptTypePaths = map[string]string{
 	"NAICSIndustryClassification": "industry-classifications",
 }
 
-type Service interface {
-	ListenForNotifications(ctx context.Context, workerID int)
-	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error)
-	Healthchecks() []fthealth.Check
-}
-
 type systemHealth struct {
 	sync.RWMutex
 	healthy  bool

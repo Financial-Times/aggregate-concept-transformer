@@ -142,19 +142,12 @@ type MockService struct {
 	err           error
 }
 
-func NewMockService(concepts map[string]transform.OldAggregatedConcept, notifications []sqs.ConceptUpdate, healthchecks []fthealth.Check, err error) Service {
+func NewMockService(concepts map[string]transform.OldAggregatedConcept, notifications []sqs.ConceptUpdate, healthchecks []fthealth.Check, err error) *MockService {
 	return &MockService{
 		concepts:      concepts,
 		notifications: notifications,
 		healthchecks:  healthchecks,
 		err:           err,
-	}
-}
-
-func (s *MockService) ListenForNotifications(ctx context.Context, workerId int) {
-	for _, n := range s.notifications {
-		//nolint:errcheck
-		s.ProcessMessage(ctx, n.UUID, n.Bookmark)
 	}
 }
 

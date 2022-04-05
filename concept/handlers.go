@@ -20,8 +20,13 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 )
 
+type aggregateService interface {
+	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error)
+}
+
 type AggregateConceptHandler struct {
-	svc            Service
+	svc            aggregateService
 	requestTimeout time.Duration
 }
 
@@ -29,7 +34,7 @@ type httpClient interface {
 	Do(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewHandler(svc Service, timeout time.Duration) AggregateConceptHandler {
+func NewHandler(svc aggregateService, timeout time.Duration) AggregateConceptHandler {
 	return AggregateConceptHandler{svc: svc, requestTimeout: timeout}
 }
 
