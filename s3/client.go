@@ -79,6 +79,7 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (b
 		logger.WithError(err).WithUUID(UUID).Error("Error retrieving concept from S3")
 		return false, ontology.NewConcept{}, "", err
 	}
+	defer resp.Body.Close()
 
 	getHeadersParams := &s3.HeadObjectInput{
 		Bucket: aws.String(c.bucketName),
