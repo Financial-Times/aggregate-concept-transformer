@@ -262,10 +262,11 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 		personUUID, err := getPersonUUIDFromConcept(concordedConcept)
 		if err != nil {
 			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).WithError(err).Errorf("Concept couldn't be purged from Varnish cache")
-		}
-		err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{personUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID)
-		if err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(personUUID).Errorf("Concept couldn't be purged from Varnish cache")
+		} else {
+			err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{personUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID)
+			if err != nil {
+				logger.WithTransactionID(transactionID).WithUUID(personUUID).WithError(err).Errorf("Concept couldn't be purged from Varnish cache")
+			}
 		}
 	}
 
