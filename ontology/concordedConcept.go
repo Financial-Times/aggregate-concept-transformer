@@ -33,7 +33,7 @@ type AdditionalConcordedFields struct {
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
 }
 
-func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
+func (cc NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(cc.RequiredConcordedFields)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (cc *NewAggregatedConcept) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	rels, err := mappify(&cc.Relationships)
+	rels, err := mappify(cc.Relationships)
 	if err != nil {
 		return nil, err
 	}
