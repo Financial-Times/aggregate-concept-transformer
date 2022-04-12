@@ -32,7 +32,7 @@ type AdditionalSourceFields struct {
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
 }
 
-func (sc *NewConcept) MarshalJSON() ([]byte, error) {
+func (sc NewConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(sc.RequiredSourceFields)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (sc *NewConcept) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	rels, err := mappify(&sc.Relationships)
+	rels, err := mappify(sc.Relationships)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,40 @@
+{
+  "prefUUID": "74b5ac98-c19a-3ecb-99c4-5daab97d761f",
+  "prefLabel": "Scarlett Retail Group Ltd.",
+  "type": "Organisation",
+  "aliases": [
+    "Scarlett Retail Group Ltd."
+  ],
+  "countryOfIncorporation": "GB",
+  "countryOfOperations": "GB",
+  "properName": "Scarlett Retail Group Ltd.",
+  "naicsIndustryClassifications": [
+    {
+      "uuid": "afc85187-7af3-4e85-9be2-ef7e1e9eec91",
+      "rank": 1
+    }
+  ],
+  "sourceRepresentations": [
+    {
+      "uuid": "74b5ac98-c19a-3ecb-99c4-5daab97d761f",
+      "type": "Organisation",
+      "prefLabel": "Scarlett Retail Group Ltd.",
+      "authority": "FACTSET",
+      "authorityValue": "05K3SY-E",
+      "aliases": [
+        "Scarlett Retail Group Ltd."
+      ],
+      "countryOfIncorporation": "GB",
+      "countryOfOperations": "GB",
+      "countryOfIncorporationUUID": "6b683eff-56c3-43d9-acfc-7511d974fc01",
+      "countryOfOperationsUUID": "6b683eff-56c3-43d9-acfc-7511d974fc01",
+      "properName": "Scarlett Retail Group Ltd.",
+      "naicsIndustryClassifications": [
+        {
+          "uuid": "afc85187-7af3-4e85-9be2-ef7e1e9eec91",
+          "rank": 1
+        }
+      ]
+    }
+  ]
+}

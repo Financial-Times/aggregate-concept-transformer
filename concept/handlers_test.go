@@ -3,8 +3,9 @@ package concept
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -21,22 +22,26 @@ import (
 
 func TestHandlers(t *testing.T) {
 	testCases := map[string]struct {
-		method        string
-		url           string
-		requestBody   string
-		resultCode    int
-		resultBody    string
-		err           error
-		concepts      map[string]transform.OldAggregatedConcept
-		notifications []sqs.ConceptUpdate
-		healthchecks  []fthealth.Check
-		cancelContext bool
+		method         string
+		url            string
+		requestBody    string
+		resultCode     int
+		resultJSONBody map[string]interface{}
+		resultTextBody string
+		err            error
+		concepts       map[string]transform.OldAggregatedConcept
+		notifications  []sqs.ConceptUpdate
+		healthchecks   []fthealth.Check
+		cancelContext  bool
 	}{
 		"Get Concept - Success": {
 			method:     "GET",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 			resultCode: 200,
-			resultBody: "{\"prefUUID\":\"f7fd05ea-9999-47c0-9be9-c99dd84d0097\",\"prefLabel\":\"TestConcept\"}\n",
+			resultJSONBody: map[string]interface{}{
+				"prefUUID":  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+				"prefLabel": "TestConcept",
+			},
 			concepts: map[string]transform.OldAggregatedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
@@ -48,14 +53,18 @@ func TestHandlers(t *testing.T) {
 			method:     "GET",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 			resultCode: 500,
-			resultBody: "{\"message\":\"Canonical concept not found in S3\"}",
-			err:        errors.New("Canonical concept not found in S3"),
+			resultJSONBody: map[string]interface{}{
+				"message": "Canonical concept not found in S3",
+			},
+			err: errors.New("Canonical concept not found in S3"),
 		},
 		"Send Concept - Success": {
 			method:     "POST",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097/send",
 			resultCode: 200,
-			resultBody: "{\"message\":\"Concept f7fd05ea-9999-47c0-9be9-c99dd84d0097 updated successfully.\"}",
+			resultJSONBody: map[string]interface{}{
+				"message": "Concept f7fd05ea-9999-47c0-9be9-c99dd84d0097 updated successfully.",
+			},
 			concepts: map[string]transform.OldAggregatedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
@@ -67,20 +76,22 @@ func TestHandlers(t *testing.T) {
 			method:     "POST",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097/send",
 			resultCode: 500,
-			resultBody: "{\"message\":\"Could not process the concept.\"}",
-			err:        errors.New("Could not process the concept."),
+			resultJSONBody: map[string]interface{}{
+				"message": "could not process the concept",
+			},
+			err: errors.New("could not process the concept"),
 		},
 		"GTG - Success": {
-			method:     "GET",
-			url:        "/__gtg",
-			resultCode: 200,
-			resultBody: "OK",
+			method:         "GET",
+			url:            "/__gtg",
+			resultCode:     200,
+			resultTextBody: "OK",
 		},
 		"GTG - Failure": {
-			method:     "GET",
-			url:        "/__gtg",
-			resultCode: 503,
-			resultBody: "GTG fail error",
+			method:         "GET",
+			url:            "/__gtg",
+			resultCode:     503,
+			resultTextBody: "GTG fail error",
 			healthchecks: []fthealth.Check{
 				{
 					Checker: func() (string, error) {
@@ -90,17 +101,21 @@ func TestHandlers(t *testing.T) {
 			},
 		},
 		"Get Concept - Context cancelled": {
-			method:        "GET",
-			url:           "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
-			resultCode:    500,
-			resultBody:    "{\"message\":\"context canceled\"}",
+			method:     "GET",
+			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+			resultCode: 500,
+			resultJSONBody: map[string]interface{}{
+				"message": "context canceled",
+			},
 			cancelContext: true,
 		},
 		"Send Concept - Context cancelled": {
-			method:        "POST",
-			url:           "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097/send",
-			resultCode:    500,
-			resultBody:    "{\"message\":\"context canceled\"}",
+			method:     "POST",
+			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097/send",
+			resultCode: 500,
+			resultJSONBody: map[string]interface{}{
+				"message": "context canceled",
+			},
 			cancelContext: true,
 		},
 	}
@@ -124,12 +139,20 @@ func TestHandlers(t *testing.T) {
 
 			sm.ServeHTTP(rr, req)
 
-			b, err := ioutil.ReadAll(rr.Body)
-			assert.NoError(t, err)
-			body := string(b)
 			assert.Equal(t, d.resultCode, rr.Code, testName)
-			if d.resultBody != "IGNORE" {
-				assert.Equal(t, d.resultBody, body, testName)
+			if d.resultTextBody != "" {
+				b, err := io.ReadAll(rr.Body)
+				assert.NoError(t, err)
+				actual := string(b)
+				assert.Equal(t, d.resultTextBody, actual, testName)
+				return
+			}
+			if d.resultJSONBody != nil {
+				actual := map[string]interface{}{}
+				err := json.NewDecoder(rr.Body).Decode(&actual)
+				assert.NoError(t, err)
+				assert.Equal(t, d.resultJSONBody, actual, testName)
+				return
 			}
 		})
 	}
