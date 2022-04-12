@@ -6,6 +6,7 @@ import (
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 )
 
@@ -19,14 +20,21 @@ type mockS3Client struct {
 	callsMocked bool
 }
 
-func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error) {
+func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
 	if s.callsMocked {
 		s.Called(UUID)
 	}
-	if c, ok := s.concepts[UUID]; ok {
-		return true, c.concept, c.transactionID, s.err
+
+	c, ok := s.concepts[UUID]
+	if !ok {
+		return false, ontology.NewConcept{}, "", s.err
 	}
-	return false, transform.OldConcept{}, "", s.err
+
+	concept, err := transform.ToNewSourceConcept(c.concept)
+	if err != nil {
+		return false, ontology.NewConcept{}, "", err
+	}
+	return true, concept, c.transactionID, s.err
 }
 func (s *mockS3Client) Healthcheck() fthealth.Check {
 	return fthealth.Check{

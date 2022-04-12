@@ -17,11 +17,16 @@ import (
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
+type aggregateService interface {
+	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error)
+}
+
 type AggregateConceptHandler struct {
-	svc            Service
+	svc            aggregateService
 	requestTimeout time.Duration
 }
 
@@ -29,7 +34,7 @@ type httpClient interface {
 	Do(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewHandler(svc Service, timeout time.Duration) AggregateConceptHandler {
+func NewHandler(svc aggregateService, timeout time.Duration) AggregateConceptHandler {
 	return AggregateConceptHandler{svc: svc, requestTimeout: timeout}
 }
 
@@ -54,9 +59,9 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(concept)
 }
 
-func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (transform.OldAggregatedConcept, string, error) {
+func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ontology.NewAggregatedConcept, string, error) {
 	type concordedTransaction struct {
-		Concept       transform.OldAggregatedConcept
+		Concept       ontology.NewAggregatedConcept
 		TransactionID string
 		Err           error
 	}

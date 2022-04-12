@@ -20,8 +20,6 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/ontology/aggregate"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
-	"github.com/Financial-Times/aggregate-concept-transformer/s3"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
@@ -37,13 +35,6 @@ var irregularConceptTypePaths = map[string]string{
 	"Person":                      "people",
 	"PublicCompany":               "organisations",
 	"NAICSIndustryClassification": "industry-classifications",
-}
-
-type Service interface {
-	ListenForNotifications(ctx context.Context, workerID int)
-	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error)
-	Healthchecks() []fthealth.Check
 }
 
 type systemHealth struct {
@@ -85,8 +76,13 @@ func (r *systemHealth) processChannel() {
 	}
 }
 
+type normalisedClient interface {
+	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error)
+	Healthcheck() fthealth.Check
+}
+
 type AggregateService struct {
-	s3                              s3.Client
+	nStore                          normalisedClient
 	concordances                    concordances.Client
 	conceptUpdatesSqs               sqs.Client
 	eventsSqs                       sqs.Client
@@ -102,7 +98,7 @@ type AggregateService struct {
 }
 
 func NewService(
-	S3Client s3.Client,
+	S3Client normalisedClient,
 	conceptUpdatesSQSClient sqs.Client,
 	eventsSQSClient sqs.Client,
 	concordancesClient concordances.Client,
@@ -126,7 +122,7 @@ func NewService(
 	go health.processChannel()
 
 	return &AggregateService{
-		s3:                              S3Client,
+		nStore:                          S3Client,
 		concordances:                    concordancesClient,
 		conceptUpdatesSqs:               conceptUpdatesSQSClient,
 		eventsSqs:                       eventsSQSClient,
@@ -257,14 +253,20 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 
 	//optionally purge other affected concepts
 	if concordedConcept.Type == "FinancialInstrument" {
-		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.SourceRepresentations[0].IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.SourceRepresentations[0].IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
+		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.IssuedBy}, "Organisation", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.IssuedBy).Errorf("Concept couldn't be purged from Varnish cache")
 		}
 	}
 
 	if concordedConcept.Type == "Membership" {
-		if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{concordedConcept.PersonUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
-			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PersonUUID).Errorf("Concept couldn't be purged from Varnish cache")
+		personUUID, err := getPersonUUIDFromConcept(concordedConcept)
+		if err != nil {
+			logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).WithError(err).Errorf("Concept couldn't be purged from Varnish cache")
+		} else {
+			err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, []string{personUUID}, "Person", s.typesToPurgeFromPublicEndpoints, transactionID)
+			if err != nil {
+				logger.WithTransactionID(transactionID).WithUUID(personUUID).WithError(err).Errorf("Concept couldn't be purged from Varnish cache")
+			}
 		}
 	}
 
@@ -277,7 +279,7 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	}
 
 	if err = s.eventsSqs.SendEvents(ctx, updateRecord.ChangedRecords); err != nil {
-		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PersonUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
+		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
 		return err
 	}
 
@@ -339,9 +341,9 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error) {
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
 	type concordedData struct {
-		Concept       transform.OldAggregatedConcept
+		Concept       ontology.NewAggregatedConcept
 		TransactionID string
 		Err           error
 	}
@@ -355,25 +357,25 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	case data := <-ch:
 		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return transform.OldAggregatedConcept{}, "", ctx.Err()
+		return ontology.NewAggregatedConcept{}, "", ctx.Err()
 	}
 }
 
 // nolint: gocognit // TODO: fix 'cognitive complexity 21 of func `(*AggregateService).getConcordedConcept` is high (> 20) (gocognit)'
-func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (transform.OldAggregatedConcept, string, error) {
+func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
 	var transactionID string
 	var err error
-	oldConcepts := []transform.OldConcept{}
+	sourceConcepts := []ontology.NewConcept{}
 
 	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
 	if err != nil {
-		return transform.OldAggregatedConcept{}, "", err
+		return ontology.NewAggregatedConcept{}, "", err
 	}
 	logger.WithField("UUID", UUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
-		return transform.OldAggregatedConcept{}, "", err
+		return ontology.NewAggregatedConcept{}, "", err
 	}
 
 	// Get all concepts from S3
@@ -383,81 +385,61 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept transform.OldConcept
-			found, sourceConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, conc.UUID)
+			var sourceConcept ontology.NewConcept
+			found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
 			if err != nil {
-				return transform.OldAggregatedConcept{}, "", err
+				return ontology.NewAggregatedConcept{}, "", err
 			}
 
 			if !found {
 				//we should let the concorded concept to be written as a "Thing"
 				logger.WithField("UUID", UUID).Warn(fmt.Sprintf("Source concept %s not found in S3", conc))
 				sourceConcept.Authority = authority
-				sourceConcept.AuthValue = conc.AuthorityValue
+				sourceConcept.AuthorityValue = conc.AuthorityValue
 				sourceConcept.UUID = conc.UUID
 				sourceConcept.Type = "Thing"
 			}
-			oldConcepts = append(oldConcepts, sourceConcept)
 
+			sourceConcepts = append(sourceConcepts, sourceConcept)
 		}
 	}
-	var primaryOldConcept transform.OldConcept
+
+	var primaryConcept ontology.NewConcept
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		foundPrimary, primaryOldConcept, transactionID, err = s.s3.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		foundPrimary, primaryConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
 		if err != nil {
-			return transform.OldAggregatedConcept{}, "", err
+			return ontology.NewAggregatedConcept{}, "", err
 		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", UUID).Error(err.Error())
-			return transform.OldAggregatedConcept{}, "", err
+			return ontology.NewAggregatedConcept{}, "", err
 		}
 	}
 
 	// transform concepts to the new format
-	if primaryOldConcept.UUID == "" {
+	if primaryConcept.UUID == "" {
 		// there is no primary authority concept
-		sourceCount := len(oldConcepts)
+		sourceCount := len(sourceConcepts)
 		if sourceCount == 0 {
 			// sanity check. concordances gathering should return 404 if there are no sources.
 			// we don't return an error in order to keep the same behavior as in v1.23 of the service.
 			logger.WithTransactionID(transactionID).WithUUID(UUID).Error("no sources found")
-			return transform.OldAggregatedConcept{}, "", nil
+			return ontology.NewAggregatedConcept{}, "", nil
 		}
 		// set the primary concept to the last source concept to keep the behaviour the same as in v1.23
-		primaryOldConcept = oldConcepts[sourceCount-1]
-		oldConcepts = oldConcepts[:sourceCount-1]
+		primaryConcept = sourceConcepts[sourceCount-1]
+		sourceConcepts = sourceConcepts[:sourceCount-1]
 	}
 
-	primaryConcept, err := transform.ToNewSourceConcept(primaryOldConcept)
-	if err != nil {
-		logger.WithError(err).WithTransactionID(transactionID).WithUUID(primaryOldConcept.UUID).Error("failed to transform primary concept to new format")
-		return transform.OldAggregatedConcept{}, "", err
-	}
-
-	var sources []ontology.NewConcept
-	for _, old := range oldConcepts {
-		sourceConcept, err := transform.ToNewSourceConcept(old) //nolint: govet // we don't care that err is shadow
-		if err != nil {
-			logger.WithError(err).WithTransactionID(transactionID).WithUUID(old.UUID).Error("failed to transform concept to new format")
-			return transform.OldAggregatedConcept{}, "", err
-		}
-		sources = append(sources, sourceConcept)
-	}
-	concordedConcept := aggregate.CreateAggregateConcept(primaryConcept, sources)
-	oldConcorded, err := transform.ToOldAggregateConcept(concordedConcept)
-	if err != nil {
-		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Error("failed to transform concorded concept to old format")
-		return transform.OldAggregatedConcept{}, "", err
-	}
-
-	return oldConcorded, transactionID, nil
+	concordedConcept := aggregate.CreateAggregateConcept(primaryConcept, sourceConcepts)
+	return concordedConcept, transactionID, nil
 }
 
 func (s *AggregateService) Healthchecks() []fthealth.Check {
 	checks := []fthealth.Check{
-		s.s3.Healthcheck(),
+		s.nStore.Healthcheck(),
 		s.concordances.Healthcheck(),
 	}
 	if !s.readOnly {
@@ -516,7 +498,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept transform.OldAggregatedConcept, tid string) (sqs.ConceptChanges, error) {
+func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.NewAggregatedConcept, tid string) (sqs.ConceptChanges, error) {
 	updatedConcepts := sqs.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
@@ -667,7 +649,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept transform.OldAggregatedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept ontology.NewAggregatedConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false
@@ -688,4 +670,15 @@ func isTypeAllowedInElastic(concordedConcept transform.OldAggregatedConcept) boo
 	}
 
 	return true
+}
+
+func getPersonUUIDFromConcept(concept ontology.NewAggregatedConcept) (string, error) {
+	const personRelLabel = "HAS_MEMBER"
+	for _, rel := range concept.Relationships {
+		if rel.Label != personRelLabel {
+			continue
+		}
+		return rel.UUID, nil
+	}
+	return "", errors.New("membership is missing 'HAS_MEMBER' relationship")
 }

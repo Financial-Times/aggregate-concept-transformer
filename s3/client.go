@@ -12,23 +12,25 @@ import (
 	"github.com/Financial-Times/go-logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
+	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
-type Client interface {
-	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error)
-	Healthcheck() fthealth.Check
-}
-
-type ConceptClient struct {
-	s3         *s3.S3
+type Client struct {
+	s3         s3API
 	bucketName string
 }
 
-func NewClient(bucketName string, awsRegion string) (Client, error) {
+type s3API interface {
+	GetObjectWithContext(ctx aws.Context, input *s3.GetObjectInput, opts ...request.Option) (*s3.GetObjectOutput, error)
+	HeadObjectWithContext(ctx aws.Context, input *s3.HeadObjectInput, opts ...request.Option) (*s3.HeadObjectOutput, error)
+	HeadBucket(input *s3.HeadBucketInput) (*s3.HeadBucketOutput, error)
+}
+
+func NewClient(bucketName string, awsRegion string) (*Client, error) {
 	hc := http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -51,17 +53,17 @@ func NewClient(bucketName string, awsRegion string) (Client, error) {
 		})
 	if err != nil {
 		logger.WithError(err).Error("Unable to create an S3 client")
-		return &ConceptClient{}, err
+		return &Client{}, err
 	}
 	client := s3.New(sess)
 
-	return &ConceptClient{
+	return &Client{
 		s3:         client,
 		bucketName: bucketName,
 	}, err
 }
 
-func (c *ConceptClient) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, transform.OldConcept, string, error) {
+func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
 	getObjectParams := &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
 		Key:    aws.String(getKey(UUID)),
@@ -72,11 +74,12 @@ func (c *ConceptClient) GetConceptAndTransactionID(ctx context.Context, UUID str
 		e, ok := err.(awserr.Error)
 		if ok && e.Code() == "NoSuchKey" {
 			// NotFound rather than error, so no logging needed.
-			return false, transform.OldConcept{}, "", nil
+			return false, ontology.NewConcept{}, "", nil
 		}
 		logger.WithError(err).WithUUID(UUID).Error("Error retrieving concept from S3")
-		return false, transform.OldConcept{}, "", err
+		return false, ontology.NewConcept{}, "", err
 	}
+	defer resp.Body.Close()
 
 	getHeadersParams := &s3.HeadObjectInput{
 		Bucket: aws.String(c.bucketName),
@@ -85,19 +88,19 @@ func (c *ConceptClient) GetConceptAndTransactionID(ctx context.Context, UUID str
 	ho, err := c.s3.HeadObjectWithContext(ctx, getHeadersParams)
 	if err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot access S3 head object")
-		return false, transform.OldConcept{}, "", err
+		return false, ontology.NewConcept{}, "", err
 	}
 	tid := ho.Metadata["Transaction_id"]
 
-	var concept transform.OldConcept
+	var concept ontology.NewConcept
 	if err = json.NewDecoder(resp.Body).Decode(&concept); err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot unmarshal object into a concept")
-		return true, transform.OldConcept{}, "", err
+		return true, ontology.NewConcept{}, "", err
 	}
 	return true, concept, *tid, nil
 }
 
-func (c *ConceptClient) Healthcheck() fthealth.Check {
+func (c *Client) Healthcheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "Editorial updates of concepts will not be written into UPP",
 		Name:             "Check connectivity to S3 bucket",

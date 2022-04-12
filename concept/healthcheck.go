@@ -5,9 +5,13 @@ import (
 	"github.com/Financial-Times/service-status-go/gtg"
 )
 
+type healthChecker interface {
+	Healthchecks() []fthealth.Check
+}
+
 type HealthService struct {
 	config *config
-	svc    Service
+	svc    healthChecker
 	Checks []fthealth.Check
 }
 
@@ -18,7 +22,7 @@ type config struct {
 	description   string
 }
 
-func NewHealthService(svc Service, appSystemCode string, appName string, port int, description string) *HealthService {
+func NewHealthService(svc healthChecker, appSystemCode string, appName string, port int, description string) *HealthService {
 	service := &HealthService{
 		config: &config{
 			appSystemCode: appSystemCode,

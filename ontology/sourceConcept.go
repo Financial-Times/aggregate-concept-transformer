@@ -10,11 +10,11 @@ type NewConcept struct {
 }
 
 type RequiredSourceFields struct {
-	UUID              string `json:"uuid"`
-	Type              string `json:"type"`
-	PrefLabel         string `json:"prefLabel"`
-	Authority         string `json:"authority"`
-	AuthorityValue    string `json:"authorityValue"`
+	UUID              string `json:"uuid,omitempty"`
+	Type              string `json:"type,omitempty"`
+	PrefLabel         string `json:"prefLabel,omitempty"`
+	Authority         string `json:"authority,omitempty"`
+	AuthorityValue    string `json:"authorityValue,omitempty"`
 	LastModifiedEpoch int    `json:"lastModifiedEpoch,omitempty"`
 	Hash              string `json:"hash,omitempty"`
 }
@@ -32,7 +32,7 @@ type AdditionalSourceFields struct {
 	IsDeprecated bool `json:"isDeprecated,omitempty"`
 }
 
-func (sc *NewConcept) MarshalJSON() ([]byte, error) {
+func (sc NewConcept) MarshalJSON() ([]byte, error) {
 	req, err := mappify(sc.RequiredSourceFields)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (sc *NewConcept) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	rels, err := mappify(&sc.Relationships)
+	rels, err := mappify(sc.Relationships)
 	if err != nil {
 		return nil, err
 	}

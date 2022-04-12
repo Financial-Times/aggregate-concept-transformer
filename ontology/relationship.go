@@ -13,9 +13,9 @@ type Relationship struct {
 
 type Relationships []Relationship
 
-func (r *Relationships) MarshalJSON() ([]byte, error) {
+func (r Relationships) MarshalJSON() ([]byte, error) {
 	result := map[string]interface{}{}
-	for _, rel := range *r {
+	for _, rel := range r {
 		if rel.UUID == "" {
 			continue
 		}
@@ -63,6 +63,10 @@ func writeRelationshipsToAny(cfg RelationshipConfig, rel Relationship, prev inte
 		}
 
 		relProps := rel.Properties
+		if relProps == nil {
+			// relProps should never be nil, but if it is, ensure that we will not panic.
+			relProps = map[string]interface{}{}
+		}
 		uuidKey := GetConfig().GetRelationshipUUIDKey(rel.Label)
 		relProps[uuidKey] = rel.UUID
 
