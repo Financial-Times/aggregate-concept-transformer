@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	logger.InitDefaultLogger("test")
+	logger.InitLogger("test", "panic")
 }
 
 type RWTestSuite struct {

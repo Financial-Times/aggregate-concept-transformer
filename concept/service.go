@@ -18,9 +18,10 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/aggregate"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology"
+	"github.com/Financial-Times/cm-graph-ontology/aggregate"
 )
 
 const (

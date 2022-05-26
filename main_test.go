@@ -17,9 +17,9 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concept"
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 
+	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 )
 
