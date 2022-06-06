@@ -7,17 +7,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/rcrowley/go-metrics"
-	log "github.com/sirupsen/logrus"
-
+	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/rcrowley/go-metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 type aggregateService interface {

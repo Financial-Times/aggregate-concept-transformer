@@ -3,11 +3,10 @@ package concept
 import (
 	"context"
 
+	ontology "github.com/Financial-Times/cm-graph-ontology"
+	"github.com/Financial-Times/cm-graph-ontology/transform"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 )
 
 type mockS3Client struct {

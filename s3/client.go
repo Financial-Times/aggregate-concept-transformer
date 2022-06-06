@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,8 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
 )
 
 type Client struct {

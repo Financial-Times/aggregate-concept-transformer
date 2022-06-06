@@ -5,6 +5,11 @@ ENV PROJECT=aggregate-concept-transformer
 ENV ORG_PATH="github.com/Financial-Times"
 ENV SRC_FOLDER="${GOPATH}/src/${ORG_PATH}/${PROJECT}"
 
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
+
+RUN git config --global url."https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com".insteadOf "https://github.com"
+
 COPY . ${SRC_FOLDER}
 WORKDIR ${SRC_FOLDER}
 

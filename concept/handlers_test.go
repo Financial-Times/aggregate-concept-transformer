@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	ontology "github.com/Financial-Times/cm-graph-ontology"
+	"github.com/Financial-Times/cm-graph-ontology/transform"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology"
-	"github.com/Financial-Times/aggregate-concept-transformer/ontology/transform"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 

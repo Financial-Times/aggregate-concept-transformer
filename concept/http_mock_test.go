@@ -18,7 +18,7 @@ type mockHTTPClient struct {
 }
 
 func init() {
-	logger.InitLogger("test-aggregate-concept-transformer", "debug")
+	logger.InitLogger("test-aggregate-concept-transformer", "panic")
 }
 
 func (c *mockHTTPClient) Do(req *http.Request) (resp *http.Response, err error) {
