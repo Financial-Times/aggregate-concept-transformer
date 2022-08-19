@@ -1,5 +1,5 @@
-github.com/Financial-Times/cm-graph-ontology v0.0.4 h1:0MYFhCQH8qV+Qla4aSePr81JlI5Dy4IymH/ZxcqEbzQ=
-github.com/Financial-Times/cm-graph-ontology v0.0.4/go.mod h1:oZOHP4/83o8jExjKMqTSDajC4WXBJ0qK5wZfwu/+l+g=
+github.com/Financial-Times/cm-graph-ontology v0.0.8 h1:UKWmeX8eLXhvw41siQchLd+N6asH6FMpbzsp5Au0XZE=
+github.com/Financial-Times/cm-graph-ontology v0.0.8/go.mod h1:SbHvysEXEg6tpMmtv7o5AgzTtwAGoqx/Hj7i1QNjTE8=
 github.com/Financial-Times/cm-neo4j-driver v1.1.0/go.mod h1:fQ77C8A+6I+ihwe6Ob8Y7sIzU3s/DTrjBZJGVQOeum0=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f h1:QzpUQuWLBJI4Gc8ZsJMlbm1kOvSqzvCRgDeKtTrk2+s=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f/go.mod h1:gpAzq6W5rCheYlY32JOIxS/VjVcYHbC2PkMzQngHT9c=
@@ -38,6 +38,8 @@ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.7 h1:81/ik6ipDQS2aGcBfIN5dHDB36BwrStyeAQquSYCV4o=
 github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/handlers v1.4.1 h1:BHvcRGJe/TrL+OqFxoKQGddTgeibiOjaBssV5a/N9sw=
 github.com/gorilla/handlers v1.4.1/go.mod h1:Qkdc/uu4tH4g6mTK6auzZ766c4CA0Ng8+o/OAirnOIQ=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
