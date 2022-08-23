@@ -16,3 +16,4 @@ resources:
     memory: 40Mi
   limits:
     memory: 512Mi
+serviceAccountName: eksctl-aggregate-concept-transformer-serviceaccount
