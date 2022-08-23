@@ -2,6 +2,8 @@ module github.com/Financial-Times/aggregate-concept-transformer
 
 go 1.16
 
+replace github.com/Financial-Times/cm-graph-ontology => github.com/Financial-Times/cm-graph-ontology v0.0.9-0.20220822130210-9a2f7d191ed1
+
 require (
 	github.com/Financial-Times/cm-graph-ontology v0.0.8
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
