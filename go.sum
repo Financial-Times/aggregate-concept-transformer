@@ -1,5 +1,5 @@
-github.com/Financial-Times/cm-graph-ontology v0.0.9-0.20220822130210-9a2f7d191ed1 h1:MXOcvGkYCWrkPaqJkan7Hd/x4TUC6N3oujd8VBjfZhs=
-github.com/Financial-Times/cm-graph-ontology v0.0.9-0.20220822130210-9a2f7d191ed1/go.mod h1:SbHvysEXEg6tpMmtv7o5AgzTtwAGoqx/Hj7i1QNjTE8=
+github.com/Financial-Times/cm-graph-ontology v1.0.0 h1:7Bt8qsu9RbIJCIHbCvxuhCr8S64usL3H9XrDnwr23jk=
+github.com/Financial-Times/cm-graph-ontology v1.0.0/go.mod h1:SbHvysEXEg6tpMmtv7o5AgzTtwAGoqx/Hj7i1QNjTE8=
 github.com/Financial-Times/cm-neo4j-driver v1.1.0/go.mod h1:fQ77C8A+6I+ihwe6Ob8Y7sIzU3s/DTrjBZJGVQOeum0=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f h1:QzpUQuWLBJI4Gc8ZsJMlbm1kOvSqzvCRgDeKtTrk2+s=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f/go.mod h1:gpAzq6W5rCheYlY32JOIxS/VjVcYHbC2PkMzQngHT9c=
