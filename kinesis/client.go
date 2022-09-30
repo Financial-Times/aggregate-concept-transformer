@@ -2,6 +2,7 @@ package kinesis
 
 import (
 	"context"
+	"fmt"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
@@ -28,7 +29,13 @@ func NewClient(streamName string, region string, arn string) (Client, error) {
 		Credentials: stscreds.NewCredentials(sess, arn, func(p *stscreds.AssumeRoleProvider) {}),
 	})
 
-	_, err := svc.DescribeStream(&kinesis.DescribeStreamInput{
+	credValues, err := sess.Config.Credentials.Get()
+	if err != nil {
+		return &KinesisClient{}, fmt.Errorf("failed to obtain AWS credentials for values with error: %w, while creating kinesis client", err)
+	}
+	logger.Infof("Obtaining AWS credentials by using [%s] as provider for kinesis client", credValues.ProviderName)
+
+	_, err = svc.DescribeStream(&kinesis.DescribeStreamInput{
 		StreamName: aws.String(streamName),
 	})
 	if err != nil {

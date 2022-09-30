@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -54,6 +55,13 @@ func NewClient(bucketName string, awsRegion string) (*Client, error) {
 		logger.WithError(err).Error("Unable to create an S3 client")
 		return &Client{}, err
 	}
+
+	credValues, err := sess.Config.Credentials.Get()
+	if err != nil {
+		return &Client{}, fmt.Errorf("failed to obtain AWS credentials for values with error: %w, while creating s3 client", err)
+	}
+	logger.Infof("Obtaining AWS credentials by using [%s] as provider for s3 client", credValues.ProviderName)
+
 	client := s3.New(sess)
 
 	return &Client{

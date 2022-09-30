@@ -57,6 +57,12 @@ func NewClient(awsRegion string, queueURL string, endpoint string, messagesToPro
 		logger.WithError(err).Error("Unable to create an SQS client")
 		return &NotificationClient{}, err
 	}
+	credValues, err := sess.Config.Credentials.Get()
+	if err != nil {
+		return &NotificationClient{}, fmt.Errorf("failed to obtain AWS credentials for values with error: %w, while creating sqs client", err)
+	}
+	logger.Infof("Obtaining AWS credentials by using [%s] as provider for sqs client", credValues.ProviderName)
+
 	client := sqs.New(sess)
 	return &NotificationClient{
 		sqs:          client,
