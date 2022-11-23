@@ -36,6 +36,7 @@ var irregularConceptTypePaths = map[string]string{
 	"Person":                      "people",
 	"PublicCompany":               "organisations",
 	"NAICSIndustryClassification": "industry-classifications",
+	"FTAnIIndustryClassification": "industry-classifications",
 }
 
 type systemHealth struct {
@@ -554,7 +555,7 @@ func createWriteRequest(ctx context.Context, baseURL string, urlParam string, ms
 	return request, reqURL, err
 }
 
-//Turn stored singular type to plural form
+// Turn stored singular type to plural form
 func resolveConceptType(conceptType string) string {
 	if ipath, ok := irregularConceptTypePaths[conceptType]; ok && ipath != "" {
 		return ipath
@@ -666,7 +667,7 @@ func isTypeAllowedInElastic(concordedConcept ontology.NewAggregatedConcept) bool
 			}
 		}
 		return false
-	case "IndustryClassification", "NAICSIndustryClassification":
+	case "IndustryClassification", "NAICSIndustryClassification", "FTAnIIndustryClassification":
 		return false
 	}
 
