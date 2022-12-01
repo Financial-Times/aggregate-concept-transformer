@@ -134,6 +134,4 @@ See [swagger.yml](api/swagger.yml).
 
 ## Documentation
 
-* API Doc: [API Doc](https://docs.google.com/document/d/1FSJBuAq_cncxqr-qsuzQMRcrejiPHWc41cnrpiJ3Gsc/edit)
 * Runbook: [Runbook](https://runbooks.in.ft.com/aggregate-concept-transformer)
-* Panic Guide: [API Doc](https://docs.google.com/document/d/1FSJBuAq_cncxqr-qsuzQMRcrejiPHWc41cnrpiJ3Gsc/edit)
