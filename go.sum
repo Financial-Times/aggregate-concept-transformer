@@ -1,7 +1,5 @@
-github.com/Financial-Times/cm-graph-ontology v1.0.0 h1:7Bt8qsu9RbIJCIHbCvxuhCr8S64usL3H9XrDnwr23jk=
-github.com/Financial-Times/cm-graph-ontology v1.0.0/go.mod h1:SbHvysEXEg6tpMmtv7o5AgzTtwAGoqx/Hj7i1QNjTE8=
-github.com/Financial-Times/cm-graph-ontology v1.1.1 h1:U5QAFzeuV/DQD5CN+EHrBaD1Nvu2fjRzav0/9kgWnpY=
-github.com/Financial-Times/cm-graph-ontology v1.1.1/go.mod h1:Bku34350G+ZZh31w5lDAXlzLJH4Sc5ZmWyiQdp9PlHo=
+github.com/Financial-Times/cm-graph-ontology v1.1.3 h1:kBrWOY+6LkWfEgc5SwVFRO8PTaKyBLUrsyU+19sx9Yo=
+github.com/Financial-Times/cm-graph-ontology v1.1.3/go.mod h1:Bku34350G+ZZh31w5lDAXlzLJH4Sc5ZmWyiQdp9PlHo=
 github.com/Financial-Times/cm-neo4j-driver v1.1.0/go.mod h1:fQ77C8A+6I+ihwe6Ob8Y7sIzU3s/DTrjBZJGVQOeum0=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f h1:QzpUQuWLBJI4Gc8ZsJMlbm1kOvSqzvCRgDeKtTrk2+s=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f/go.mod h1:gpAzq6W5rCheYlY32JOIxS/VjVcYHbC2PkMzQngHT9c=
@@ -15,8 +13,6 @@ github.com/Financial-Times/service-status-go v0.0.0-20160323111542-3f5199736a3d 
 github.com/Financial-Times/service-status-go v0.0.0-20160323111542-3f5199736a3d/go.mod h1:7zULC9rrq6KxFkpB3Y5zNVaEwrf1g2m3dvXJBPDXyvM=
 github.com/Financial-Times/transactionid-utils-go v0.2.0 h1:YcET5Hd1fUGWWpQSVszYUlAc15ca8tmjRetUuQKRqEQ=
 github.com/Financial-Times/transactionid-utils-go v0.2.0/go.mod h1:tPAcAFs/dR6Q7hBDGNyUyixHRvg/n9NW/JTq8C58oZ0=
-github.com/aws/aws-sdk-go v1.43.26 h1:/ABcm/2xp+Vu+iUx8+TmlwXMGjO7fmZqJMoZjml4y/4=
-github.com/aws/aws-sdk-go v1.43.26/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.83 h1:7+Rtc2Eio6EKUNoZeMV/IVxzVrY5oBQcNPtCcgIHYJA=
 github.com/aws/aws-sdk-go v1.44.83/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/davecgh/go-spew v0.0.0-20170829195320-a47672248388/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
