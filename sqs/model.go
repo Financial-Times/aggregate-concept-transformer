@@ -51,3 +51,9 @@ type ConcordanceEvent struct {
 	OldID string `json:"oldID"`
 	NewID string `json:"newID"`
 }
+
+type ConceptChangeLogEvent struct {
+	Type              string `json:"eventType"`
+	AnnotationsChange bool   `json:"annotationsChange"`
+	ChangeLog         string `json:"changelog"`
+}
