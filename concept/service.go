@@ -173,7 +173,7 @@ func (s *AggregateService) ListenForNotifications(ctx context.Context, workerID 
 					defer reqWG.Done()
 					err := s.processConceptUpdate(ctx, update)
 					if err != nil {
-						logger.WithError(err).WithUUID(n.UUID).Error("Error processing message.")
+						logger.WithError(err).WithUUID(update.UUID).Error("Error processing message.")
 					}
 
 				}(listenCtx, &wg, n)
