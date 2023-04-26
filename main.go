@@ -21,6 +21,7 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/s3"
+	"github.com/Financial-Times/aggregate-concept-transformer/sns"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
 
@@ -144,11 +145,6 @@ func main() {
 		Desc:   "AWS region the Kinesis stream is located",
 		EnvVar: "KINESIS_REGION",
 	})
-	eventsQueueURL := app.String(cli.StringOpt{
-		Name:   "eventsQueueURL",
-		Desc:   "Url of AWS SQS queue to send concept notifications to",
-		EnvVar: "EVENTS_QUEUE_URL",
-	})
 	requestLoggingOn := app.Bool(cli.BoolOpt{
 		Name:   "requestLoggingOn",
 		Value:  true,
@@ -167,6 +163,12 @@ func main() {
 		EnvVar: "READ_ONLY",
 		Value:  false,
 	})
+	conceptUpdatesSNSTopicArn := app.String(cli.StringOpt{
+		Name:   "conceptUpdatesSNSTopicArn",
+		Value:  "",
+		Desc:   "SNS Topic ARN in which concept updates are published",
+		EnvVar: "CONCEPT_UPDATES_SNS_ARN",
+	})
 
 	app.Before = func() {
 		logger.InitLogger(*appSystemCode, *logLevel)
@@ -180,9 +182,9 @@ func main() {
 			"BUCKET_NAME":             *bucketName,
 			"SQS_REGION":              *sqsRegion,
 			"CONCEPTS_QUEUE_URL":      *conceptUpdatesQueueURL,
-			"EVENTS_QUEUE_URL":        *eventsQueueURL,
 			"LOG_LEVEL":               *logLevel,
 			"KINESIS_STREAM_NAME":     *kinesisStreamName,
+			"CONCEPT_UPDATES_SNS_ARN": *conceptUpdatesSNSTopicArn,
 		}).Info("Starting app with arguments")
 
 		if *bucketName == "" {
@@ -222,7 +224,7 @@ func main() {
 		}
 
 		var conceptUpdatesSqsClient sqs.Client
-		var eventsQueueClient sqs.Client
+		var eventsSNS sns.Client
 		var kinesisClient kinesis.Client
 
 		if !*isReadOnly {
@@ -231,7 +233,7 @@ func main() {
 				logger.WithError(err).Fatal("Error creating concept updates SQS client")
 			}
 
-			eventsQueueClient, err = sqs.NewClient(*sqsRegion, *eventsQueueURL, *sqsEndpoint, *messagesToProcess, *visibilityTimeout, *waitTime)
+			eventsSNS, err = sns.NewClient(*conceptUpdatesSNSTopicArn)
 			if err != nil {
 				logger.WithError(err).Fatal("Error creating concept events SQS client")
 			}
@@ -253,7 +255,7 @@ func main() {
 		svc := concept.NewService(
 			s3Client,
 			conceptUpdatesSqsClient,
-			eventsQueueClient,
+			eventsSNS,
 			concordancesClient,
 			kinesisClient,
 			*neoWriterAddress,
