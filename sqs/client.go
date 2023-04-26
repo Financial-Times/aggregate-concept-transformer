@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
@@ -20,7 +18,6 @@ var keyMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-
 
 type Client interface {
 	ListenAndServeQueue(ctx context.Context) []ConceptUpdate
-	SendEvents(ctx context.Context, messages []Event) error
 	RemoveMessageFromQueue(ctx context.Context, receiptHandle *string) error
 	Healthcheck() fthealth.Check
 }
@@ -31,13 +28,7 @@ type NotificationClient struct {
 	queueUrl     string
 }
 
-func NewClient(awsRegion string, queueURL string, endpoint string, messagesToProcess int, visibilityTimeout int, waitTime int) (Client, error) {
-	if queueURL == "" {
-		return &NotificationClient{
-			queueUrl: queueURL,
-		}, nil
-	}
-
+func NewClient(awsRegion, queueURL, endpoint string, messagesToProcess, visibilityTimeout, waitTime int) (Client, error) {
 	listenParams := sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(queueURL),
 		MaxNumberOfMessages: aws.Int64(int64(messagesToProcess)),
@@ -77,43 +68,6 @@ func (c *NotificationClient) ListenAndServeQueue(ctx context.Context) []ConceptU
 		logger.WithError(err).Error("Error whilst listening for messages")
 	}
 	return getNotificationsFromMessages(messages.Messages)
-}
-
-func (c *NotificationClient) SendEvents(ctx context.Context, messages []Event) error {
-	if c.queueUrl == "" {
-		return nil
-	}
-	var entries []*sqs.SendMessageBatchRequestEntry
-
-	for i, msg := range messages {
-
-		jsonBytes, _ := json.Marshal(msg)
-
-		entries = append(entries, &sqs.SendMessageBatchRequestEntry{
-			MessageBody: aws.String(string(jsonBytes)),
-			Id:          aws.String(string(msg.ConceptUUID + "_" + strconv.Itoa(i))),
-		})
-	}
-
-	input := &sqs.SendMessageBatchInput{
-		QueueUrl: aws.String(c.queueUrl),
-		Entries:  entries,
-	}
-
-	output, err := c.sqs.SendMessageBatchWithContext(ctx, input)
-	if err != nil {
-		if _, ok := err.(awserr.Error); ok {
-			// We've got an AWS error, so handle accordingly.
-			logger.WithError(err.(awserr.Error).OrigErr()).Errorf("SQS send error: %s", err.(awserr.Error).Message())
-			return err.(awserr.Error).OrigErr()
-		}
-		return err
-	}
-
-	for _, v := range output.Failed {
-		logger.WithError(fmt.Errorf("SQS Error Code %d", v.Code)).Error(*v.Message)
-	}
-	return nil
 }
 
 func (c *NotificationClient) RemoveMessageFromQueue(ctx context.Context, receiptHandle *string) error {
