@@ -18,6 +18,7 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
+	"github.com/Financial-Times/aggregate-concept-transformer/sns"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 
 	ontology "github.com/Financial-Times/cm-graph-ontology"
@@ -87,7 +88,7 @@ type AggregateService struct {
 	nStore                          normalisedClient
 	concordances                    concordances.Client
 	conceptUpdatesSqs               sqs.Client
-	eventsSqs                       sqs.Client
+	eventsSns                       sns.Client
 	kinesis                         kinesis.Client
 	neoWriterAddress                string
 	varnishPurgerAddress            string
@@ -102,7 +103,7 @@ type AggregateService struct {
 func NewService(
 	S3Client normalisedClient,
 	conceptUpdatesSQSClient sqs.Client,
-	eventsSQSClient sqs.Client,
+	eventsSNSClient sns.Client,
 	concordancesClient concordances.Client,
 	kinesisClient kinesis.Client,
 	neoAddress string,
@@ -127,7 +128,7 @@ func NewService(
 		nStore:                          S3Client,
 		concordances:                    concordancesClient,
 		conceptUpdatesSqs:               conceptUpdatesSQSClient,
-		eventsSqs:                       eventsSQSClient,
+		eventsSns:                       eventsSNSClient,
 		kinesis:                         kinesisClient,
 		neoWriterAddress:                neoAddress,
 		elasticsearchWriterAddress:      elasticsearchAddress,
@@ -226,7 +227,7 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 
 	// Write to Neo4j
 	logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Debug("Sending concept to Neo4j")
-	conceptChanges, err := sendToWriter(ctx, s.httpClient, s.neoWriterAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, concordedConcept, transactionID)
+	conceptChanges, err := sendToWriter(ctx, s.httpClient, s.neoWriterAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, transactionID, concordedConcept)
 	if err != nil {
 		return err
 	}
@@ -235,7 +236,7 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("failed to marshall concept changes record: %v", conceptChanges)
 		return err
 	}
-	var updateRecord sqs.ConceptChanges
+	var updateRecord sns.ConceptChanges
 	if err = json.Unmarshal(rawJson, &updateRecord); err != nil {
 		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("failed to unmarshall raw json into update record: %v", rawJson)
 		return err
@@ -275,12 +276,12 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	// Write to Elasticsearch
 	if isTypeAllowedInElastic(concordedConcept) {
 		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Debug("Writing concept to elastic search")
-		if _, err = sendToWriter(ctx, s.httpClient, s.elasticsearchWriterAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, concordedConcept, transactionID); err != nil {
+		if _, err = sendToWriter(ctx, s.httpClient, s.elasticsearchWriterAddress, resolveConceptType(concordedConcept.Type), concordedConcept.PrefUUID, transactionID, concordedConcept); err != nil {
 			return err
 		}
 	}
 
-	if err = s.eventsSqs.SendEvents(ctx, updateRecord.ChangedRecords); err != nil {
+	if err = s.eventsSns.PublishEvents(ctx, updateRecord.ChangedRecords); err != nil {
 		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
 		return err
 	}
@@ -500,8 +501,8 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL string, urlParam string, conceptUUID string, concept ontology.NewAggregatedConcept, tid string) (sqs.ConceptChanges, error) {
-	updatedConcepts := sqs.ConceptChanges{}
+func sendToWriter(ctx context.Context, client httpClient, baseURL, urlParam, conceptUUID, tid string, concept ontology.NewAggregatedConcept) (sns.ConceptChanges, error) {
+	updatedConcepts := sns.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
 		return updatedConcepts, err

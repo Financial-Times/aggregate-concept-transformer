@@ -66,12 +66,11 @@ spec:
             secretKeyRef:
               name: global-secrets
               key: concepts.updates_sqs_url
-        - name: EVENTS_QUEUE_URL
+        - name: CONCEPT_UPDATES_SNS_ARN
           valueFrom:
-            secretKeyRef:
-              name: global-secrets
-              key: concepts.events_sqs_url
-              optional: true
+            configMapKeyRef:
+              name: global-config
+              key: concepts.events_sns_arn
         - name: KINESIS_STREAM_NAME
           valueFrom:
             secretKeyRef:
