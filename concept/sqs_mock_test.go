@@ -14,7 +14,6 @@ import (
 type mockSQSClient struct {
 	mock.Mock
 	conceptsQueue map[string]string
-	eventList     []sqs.Event
 	s             sync.RWMutex
 	err           error
 }
@@ -43,16 +42,6 @@ func (c *mockSQSClient) RemoveMessageFromQueue(ctx context.Context, receiptHandl
 		return nil
 	}
 	return errors.New("Receipt handle not present on conceptsQueue")
-}
-
-func (c *mockSQSClient) SendEvents(ctx context.Context, messages []sqs.Event) error {
-	if c.err != nil {
-		return c.err
-	}
-	for _, event := range messages {
-		c.eventList = append(c.eventList, event)
-	}
-	return nil
 }
 
 func (c *mockSQSClient) Queue() map[string]string {

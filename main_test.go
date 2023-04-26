@@ -165,11 +165,6 @@ func (s sqsMock) ListenAndServeQueue(ctx context.Context) []sqs.ConceptUpdate {
 	panic("implement me")
 }
 
-func (s sqsMock) SendEvents(ctx context.Context, messages []sqs.Event) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s sqsMock) RemoveMessageFromQueue(ctx context.Context, receiptHandle *string) error {
 	//TODO implement me
 	panic("implement me")
