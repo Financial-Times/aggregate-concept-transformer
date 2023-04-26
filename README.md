@@ -1,10 +1,10 @@
 # Aggregate Concept Transformer (aggregate-concept-transformer)
 
-[![CircleCI](https://circleci.com/gh/Financial-Times/aggregate-concept-transformer/tree/master.svg?style=svg&circle-token=0451900a8e881ac5f8ec2079ae89cdf68eb0bd1d)](https://circleci.com/gh/Financial-Times/aggregate-concept-transformer/tree/master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/Financial-Times/aggregate-concept-transformer/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/Financial-Times/aggregate-concept-transformer/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/aggregate-concept-transformer)](https://goreportcard.com/report/github.com/Financial-Times/aggregate-concept-transformer)
-[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/aggregate-concept-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/aggregate-concept-transformer)
+[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/aggregate-concept-transformer/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/aggregate-concept-transformer?branch=master)
 
-A service which gets notified via SQS of updates to source concepts in an Amazon S3 bucket. It then returns all UUIDs with concordance to said concept, requests each in turn from S3, builds the concorded JSON model and sends the updated concept JSON to both Neo4j and Elasticsearch. After the concept has successfully been written in Neo4j, the varnish-purger is called to invalidate the cache for the given concept. Finally it sends a notification of all updated concepts IDs to a Kinesis stream, a list of updates events to the event queue and finally removes the SQS message from the queue.
+A service which gets notified via SQS of updates to source concepts in an Amazon S3 bucket. It then returns all UUIDs with concordance to said concept, requests each in turn from S3, builds the concorded JSON model and sends the updated concept JSON to both Neo4j and Elasticsearch. After the concept has successfully been written in Neo4j, the varnish-purger is called to invalidate the cache for the given concept. Finally it sends a notification of all updated concepts IDs to a Kinesis stream, and to a SNS topic.
 
 ## Installation
 
@@ -22,27 +22,30 @@ Usage: aggregate-concept-transformer [OPTIONS]
 Aggregate and concord concepts in UPP.
 
 Options:
-  --app-system-code="aggregate-concept-transformer"       System Code of the application ($APP_SYSTEM_CODE)
-  --app-name="Aggregate Concept Transformer"              Application name ($APP_NAME)
-  --port="8080"                                           Port to listen on ($APP_PORT)
-  --bucketRegion="eu-west-1"                              AWS Region in which the S3 bucket is located ($BUCKET_REGION)
-  --sqsRegion=""                                          AWS Region in which the SQS queue is located ($SQS_REGION)
-  --bucketName=""                                         Bucket to read concepts from. ($BUCKET_NAME)
-  --conceptUpdatesQueueURL=""                             Url of AWS SQS queue to listen to with concept updates ($CONCEPTS_QUEUE_URL)
-  --messagesToProcess=10                                  Maximum number or messages to concurrently read off of queue and process ($MAX_MESSAGES)
-  --visibilityTimeout=30                                  Duration(seconds) that messages will be ignored by subsequent requests after initial response ($VISIBILITY_TIMEOUT)
-  --waitTime=20                                           Duration(seconds) to wait on queue for messages until returning. Will be shorter if messages arrive ($WAIT_TIME)
-  --neo4jWriterAddress="http://localhost:8080/"           Address for the Neo4J Concept Writer ($NEO_WRITER_ADDRESS)
-  --varnishPurgerAddress="http://localhost:8080/"         Address for the Varnish Purger Application ($VARNISH_PURGER_ADDRESS)  
-  --typesToPurgeFromPublicEndpoints=""                    Concept types that need purging from the public endpoints ($TYPES_TO_PURGE_FROM_PUBLIC_ENDPOINTS)  
-  --concordancesReaderAddress="http://localhost:8080/"    Address for the Neo4J Concept Writer ($CONCORDANCES_RW_ADDRESS)
-  --elasticsearchWriterAddress="http://localhost:8080/"   Address for the Elasticsearch Concept Writer ($ES_WRITER_ADDRESS)
-  --crossAccountRoleARN                                   ARN for cross account role ($CROSS_ACCOUNT_ARN)
-  --kinesisStreamName=""                                  AWS Kinesis stream name ($KINESIS_STREAM_NAME)
-  --kinesisRegion="eu-west-1"                             AWS region the Kinesis stream is located ($KINESIS_REGION)
-  --eventsQueueURL=""                                     Queue to send concept events to ($EVENTS_QUEUE_URL)
-  --requestLoggingOn=true                                 Whether to log HTTP requests or not ($REQUEST_LOGGING_ON)
-  --logLevel="info"                                       App log level ($LOG_LEVEL)
+  --app-system-code                   System Code of the application (env $APP_SYSTEM_CODE) (default "aggregate-concept-transformer")
+  --app-name                          Application name (env $APP_NAME) (default "Aggregate Concept Transformer")
+  --port                              Port to listen on (env $APP_PORT) (default 8080)
+  --bucketName                        Bucket to read concepts from. (env $BUCKET_NAME)
+  --bucketRegion                      AWS Region in which the S3 bucket is located (env $BUCKET_REGION) (default "eu-west-1")
+  --conceptUpdatesQueueURL            Url of AWS SQS queue to listen for concept updates (env $CONCEPTS_QUEUE_URL)
+  --sqsRegion                         AWS Region in which the SQS queue is located (env $SQS_REGION)
+  --sqsEndpoint                       SQS queue endpoint (for local debugging only) (env $SQS_ENDPOINT)
+  --messagesToProcess                 Maximum number or messages to concurrently read off of queue and process (env $MAX_MESSAGES) (default 10)
+  --visibilityTimeout                 Duration(seconds) that messages will be ignored by subsequent requests after initial response (env $VISIBILITY_TIMEOUT) (default 30)
+  --http-timeout                      Duration(seconds) to wait before timing out a request (env $HTTP_TIMEOUT) (default 15)
+  --waitTime                          Duration(seconds) to wait on queue for messages until returning. Will be shorter if messages arrive (env $WAIT_TIME) (default 20)
+  --neo4jWriterAddress                Address for the Neo4J Concept Writer (env $NEO_WRITER_ADDRESS) (default "http://localhost:8081/")
+  --concordancesReaderAddress         Address for the Neo4J Concept Writer (env $CONCORDANCES_RW_ADDRESS) (default "http://localhost:8082/")
+  --elasticsearchWriterAddress        Address for the Elasticsearch Concept Writer (env $ES_WRITER_ADDRESS) (default "http://localhost:8083/")
+  --varnishPurgerAddress              Address for the Varnish Purger application (env $VARNISH_PURGER_ADDRESS) (default "http://localhost:8084/")
+  --typesToPurgeFromPublicEndpoints   Concept types that need purging from specific public endpoints (other than /things) (env $TYPES_TO_PURGE_FROM_PUBLIC_ENDPOINTS) (default ["Person", "Brand", "Organisation", "PublicCompany"])
+  --crossAccountRoleARN               ARN for cross account role (env $CROSS_ACCOUNT_ARN)
+  --kinesisStreamName                 AWS Kinesis stream name (env $KINESIS_STREAM_NAME)
+  --kinesisRegion                     AWS region the Kinesis stream is located (env $KINESIS_REGION) (default "eu-west-1")
+  --requestLoggingOn                  Whether to log HTTP requests or not (env $REQUEST_LOGGING_ON) (default true)
+  --logLevel                          App log level (env $LOG_LEVEL) (default "info")
+  --read-only                         Start service in ready only mode (env $READ_ONLY)
+  --conceptUpdatesSNSTopicArn         SNS Topic ARN in which concept updates are published (env $CONCEPT_UPDATES_SNS_ARN)
 ```
 
 ### Setup AWS credentials
@@ -70,7 +73,6 @@ Start a local emulation of the SQS server (most probably you don't want to conne
 docker run --rm -p 4100:4100 --volume=`pwd`/goaws.yaml:/conf/goaws.yaml pafortin/goaws Local
 
 export CONCEPTS_QUEUE_URL=http://localhost:4100/queue/concepts
-export EVENTS_QUEUE_URL=http://localhost:4100/queue/events
 export SQS_REGION=local
 export SQS_ENDPOINT=http://localhost:4100
 ```
@@ -80,7 +82,7 @@ Setup all the necessary environment variables using the settings on Dev:
 ```shell
 # You have to be logged to the Dev cluster before you can continue
 # Get all necessary settings from the cluster and write them to a file
-kubectl set env deploy aggregate-concept-transformer --list --resolve=true | grep "BUCKET_NAME\|KINESIS_STREAM_NAME\|KINESIS_REGION\|CROSS_ACCOUNT_ARN" > env_vars
+kubectl set env deploy aggregate-concept-transformer --list --resolve=true | grep "BUCKET_NAME\|KINESIS_STREAM_NAME\|KINESIS_REGION\|CROSS_ACCOUNT_ARN\|CONCEPT_UPDATES_SNS_ARN" > env_vars
 
 # Export all variables from the file
 set -a ; source env_vars ; set +a

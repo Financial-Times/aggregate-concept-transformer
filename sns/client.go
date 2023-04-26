@@ -36,7 +36,7 @@ func NewClient(topicArn string) (Client, error) {
 	cfg := aws.NewConfig().WithRegion(tarn.Region)
 	sess, err := session.NewSession(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("creating new aws sessiont: %w", err)
+		return nil, fmt.Errorf("creating new aws session: %w", err)
 	}
 
 	snsSvc := sns.New(sess)
