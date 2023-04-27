@@ -231,18 +231,8 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	if err != nil {
 		return err
 	}
-	rawJson, err := json.Marshal(conceptChanges)
-	if err != nil {
-		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("failed to marshall concept changes record: %v", conceptChanges)
-		return err
-	}
-	var updateRecord sns.ConceptChanges
-	if err = json.Unmarshal(rawJson, &updateRecord); err != nil {
-		logger.WithError(err).WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("failed to unmarshall raw json into update record: %v", rawJson)
-		return err
-	}
 
-	if len(updateRecord.ChangedRecords) < 1 {
+	if len(conceptChanges.ChangedRecords) < 1 {
 		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Info("concept was unchanged since last update, skipping!")
 		return nil
 	}
@@ -250,7 +240,7 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 
 	// Purge concept URLs in varnish
 	// Always purge top level concept
-	if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, updateRecord.UpdatedIds, concordedConcept.Type, s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
+	if err = sendToPurger(ctx, s.httpClient, s.varnishPurgerAddress, conceptChanges.UpdatedIds, concordedConcept.Type, s.typesToPurgeFromPublicEndpoints, transactionID); err != nil {
 		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("Concept couldn't be purged from Varnish cache")
 	}
 
@@ -281,8 +271,8 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 		}
 	}
 
-	if err = s.eventsSns.PublishEvents(ctx, updateRecord.ChangedRecords); err != nil {
-		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("unable to send events: %v to Event Queue", updateRecord.ChangedRecords)
+	if err = s.eventsSns.PublishEvents(ctx, conceptChanges.ChangedRecords); err != nil {
+		logger.WithTransactionID(transactionID).WithUUID(concordedConcept.PrefUUID).Errorf("unable to send events: %v to Event Queue", conceptChanges.ChangedRecords)
 		return err
 	}
 
