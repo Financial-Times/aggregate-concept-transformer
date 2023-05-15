@@ -28,7 +28,7 @@ AWS
 
 ## Architecture
 
-The service receives notification of concept updates via Amazon SQS queue, aggregates several sources of concept information from Amazon S3 and via thr concordance data, ties them all together and posts the overall UPP view of the concept to both Neo4j and Elasticsearch, purges the Varnish cache, writes a notification in the concept events Amazon SQS queue and finally puts the updated IDs onto an Amazon Kinesis stream to be processed by FT.com.
+The service receives notification of concept updates via Amazon SQS queue, aggregates several sources of concept information from Amazon S3 and via thr concordance data, ties them all together and posts the overall UPP view of the concept to both Neo4j and Elasticsearch, purges the Varnish cache, writes a notification in the concept events Amazon SNS topic and finally puts the updated IDs onto an Amazon Kinesis stream to be processed by FT.com.
 
 ## Contains Personal Data
 

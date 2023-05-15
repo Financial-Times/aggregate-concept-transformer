@@ -17,6 +17,7 @@ import (
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concept"
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
+	"github.com/Financial-Times/aggregate-concept-transformer/sns"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 
 	ontology "github.com/Financial-Times/cm-graph-ontology"
@@ -51,6 +52,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	}
 	// sqs and kinesis are currently not used in this test so no specifics
 	sqsClient := &sqsMock{}
+	snsClient := &snsMock{}
 	ksClient := &kinesisMock{}
 	concordancesClient, err := concordances.NewClient(server.URL)
 	if err != nil {
@@ -63,7 +65,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	defer close(feedback)
 	defer close(done)
 
-	service := concept.NewService(s3, sqsClient, sqsClient, concordancesClient, ksClient, server.URL+"/neo4j", server.URL+"/elastic", server.URL+"/varnish", []string{""}, server.Client(), feedback, done, timeout, true)
+	service := concept.NewService(s3, sqsClient, snsClient, concordancesClient, ksClient, server.URL+"/neo4j", server.URL+"/elastic", server.URL+"/varnish", []string{""}, server.Client(), feedback, done, timeout, true)
 	handler := concept.NewHandler(service, timeout)
 
 	m := handler.RegisterHandlers(concept.NewHealthService(service, "", "", 8080, ""), false, feedback)
@@ -163,11 +165,6 @@ func (s sqsMock) ListenAndServeQueue(ctx context.Context) []sqs.ConceptUpdate {
 	panic("implement me")
 }
 
-func (s sqsMock) SendEvents(ctx context.Context, messages []sqs.Event) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s sqsMock) RemoveMessageFromQueue(ctx context.Context, receiptHandle *string) error {
 	//TODO implement me
 	panic("implement me")
@@ -175,6 +172,14 @@ func (s sqsMock) RemoveMessageFromQueue(ctx context.Context, receiptHandle *stri
 
 func (s sqsMock) Healthcheck() fthealth.Check {
 	return fthealth.Check{}
+}
+
+type snsMock struct {
+}
+
+func (s snsMock) PublishEvents(ctx context.Context, events []sns.Event) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 type kinesisMock struct {

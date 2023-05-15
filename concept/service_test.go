@@ -1246,11 +1246,11 @@ func getConceptFromService(svc *AggregateService, ctx context.Context, conceptUU
 	return old, tid, nil
 }
 
-func setupTestService(clientStatusCode int, writerResponse string) (*AggregateService, *mockS3Client, *mockSQSClient, *mockSQSClient, *mockKinesisStreamClient, chan bool, chan struct{}) {
+func setupTestService(clientStatusCode int, writerResponse string) (*AggregateService, *mockS3Client, *mockSQSClient, *mockSNSClient, *mockKinesisStreamClient, chan bool, chan struct{}) {
 	return setupTestServiceWithTimeout(clientStatusCode, writerResponse, time.Second*1)
 }
 
-func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, timeout time.Duration) (*AggregateService, *mockS3Client, *mockSQSClient, *mockSQSClient, *mockKinesisStreamClient, chan bool, chan struct{}) {
+func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, timeout time.Duration) (*AggregateService, *mockS3Client, *mockSQSClient, *mockSNSClient, *mockKinesisStreamClient, chan bool, chan struct{}) {
 	s3mock := &mockS3Client{
 		concepts: map[string]struct {
 			transactionID string
@@ -1726,7 +1726,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			"1": "99247059-04ec-3abb-8693-a0b8951fdcab",
 		},
 	}
-	eventsQueue := &mockSQSClient{}
+	eventsSNS := &mockSNSClient{}
 	concordClient := &mockConcordancesClient{
 		concordances: map[string][]concordances.ConcordanceRecord{
 			"f8024a12-2d71-4f0e-996d-bcbc07df3921": {
@@ -1836,7 +1836,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 	feedback := make(chan bool)
 	done := make(chan struct{})
 
-	svc := NewService(s3mock, conceptsQueue, eventsQueue, concordClient, kinesis,
+	svc := NewService(s3mock, conceptsQueue, eventsSNS, concordClient, kinesis,
 		neo4jUrl,
 		esUrl,
 		varnishPurgerUrl,
@@ -1857,5 +1857,5 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 	for len(feedback) > 0 {
 		time.Sleep(100 * time.Nanosecond)
 	}
-	return svc, s3mock, conceptsQueue, eventsQueue, kinesis, feedback, done
+	return svc, s3mock, conceptsQueue, eventsSNS, kinesis, feedback, done
 }
