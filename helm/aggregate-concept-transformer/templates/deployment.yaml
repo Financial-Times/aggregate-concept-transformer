@@ -59,12 +59,12 @@ spec:
         - name: BUCKET_NAME
           valueFrom:
             secretKeyRef:
-              name: global-secrets
+              name: doppler-global-secrets
               key: CONCEPTS_S3_BUCKET
         - name: CONCEPTS_QUEUE_URL
           valueFrom:
             secretKeyRef:
-              name: global-secrets
+              name: doppler-global-secrets
               key: CONCEPTS_UPDATES_SQS_URL
         - name: CONCEPT_UPDATES_SNS_ARN
           valueFrom:
@@ -74,17 +74,17 @@ spec:
         - name: KINESIS_STREAM_NAME
           valueFrom:
             secretKeyRef:
-              name: global-secrets
+              name: doppler-global-secrets
               key: CONCEPTS_KINESIS_STREAM
         - name: KINESIS_REGION
           valueFrom:
             secretKeyRef:
-              name: global-secrets
+              name: doppler-global-secrets
               key: CONCEPTS_KINESIS_REGION
         - name: CROSS_ACCOUNT_ARN
           valueFrom:
             secretKeyRef:
-              name: global-secrets
+              name: doppler-global-secrets
               key: IAM_CROSS_ACCOUNT_ARN
         ports:
         - containerPort: 8080
