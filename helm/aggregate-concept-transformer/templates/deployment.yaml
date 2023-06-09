@@ -60,12 +60,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: global-secrets
-              key: concepts.s3_bucket
+              key: CONCEPTS_S3_BUCKET
         - name: CONCEPTS_QUEUE_URL
           valueFrom:
             secretKeyRef:
               name: global-secrets
-              key: concepts.updates_sqs_url
+              key: CONCEPTS_UPDATES_SQS_URL
         - name: CONCEPT_UPDATES_SNS_ARN
           valueFrom:
             configMapKeyRef:
@@ -75,17 +75,17 @@ spec:
           valueFrom:
             secretKeyRef:
               name: global-secrets
-              key: concepts.kinesis_stream
+              key: CONCEPTS_KINESIS_STREAM
         - name: KINESIS_REGION
           valueFrom:
             secretKeyRef:
               name: global-secrets
-              key: concepts.kinesis_region
+              key: CONCEPTS_KINESIS_REGION
         - name: CROSS_ACCOUNT_ARN
           valueFrom:
             secretKeyRef:
               name: global-secrets
-              key: iam.cross_account_arn
+              key: IAM_CROSS_ACCOUNT_ARN
         ports:
         - containerPort: 8080
         livenessProbe:
