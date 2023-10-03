@@ -28,6 +28,7 @@ import (
 const (
 	thingsAPIEndpoint  = "/things"
 	conceptsAPIEnpoint = "/concepts"
+	lengthOfUUID       = 36
 )
 
 var (
@@ -227,6 +228,9 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	if err != nil {
 		return err
 	}
+
+	// Extract only the real UUID when publication is present, safe as the uuid is alway at least 36 characters
+	UUID = UUID[len(UUID)-lengthOfUUID:]
 	if concordedConcept.PrefUUID != UUID {
 		logger.WithTransactionID(transactionID).WithUUID(UUID).Infof("Requested concept %s is source node for canonical concept %s", UUID, concordedConcept.PrefUUID)
 	}

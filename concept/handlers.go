@@ -40,7 +40,7 @@ func NewHandler(svc aggregateService, timeout time.Duration) AggregateConceptHan
 func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	UUID := vars["uuid"]
-	publication := vars["publication"]
+	publication := r.URL.Query().Get("publication")
 	w.Header().Set("Content-Type", "application/json")
 	ctx, cancel := context.WithTimeout(r.Context(), h.requestTimeout)
 	defer cancel()
