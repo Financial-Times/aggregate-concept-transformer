@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	ontology "github.com/Financial-Times/cm-graph-ontology"
@@ -39,9 +40,13 @@ func NewHandler(svc aggregateService, timeout time.Duration) AggregateConceptHan
 func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	UUID := vars["uuid"]
+	publication := vars["publication"]
 	w.Header().Set("Content-Type", "application/json")
 	ctx, cancel := context.WithTimeout(r.Context(), h.requestTimeout)
 	defer cancel()
+	if publication != "" {
+		UUID = strings.Join([]string{publication, UUID}, "-")
+	}
 
 	concept, transactionID, err := h.getConcordedConcept(ctx, UUID)
 
