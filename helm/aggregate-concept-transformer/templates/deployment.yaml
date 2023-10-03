@@ -61,6 +61,11 @@ spec:
             secretKeyRef:
               name: doppler-global-secrets
               key: CONCEPTS_S3_BUCKET
+        - name: EXTERNAL_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: doppler-global-secrets
+              key: EXTERNAL_CONCEPTS_S3_BUCKET
         - name: CONCEPTS_QUEUE_URL
           valueFrom:
             secretKeyRef:
