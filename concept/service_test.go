@@ -74,6 +74,7 @@ const (
 	esUrl            = "concept-rw-elasticsearch"
 	neo4jUrl         = "concepts-rw-neo4j"
 	varnishPurgerUrl = "varnish-purger"
+	inceptionDate    = "2000-01-01"
 )
 
 func TestNewService(t *testing.T) {
@@ -133,11 +134,11 @@ func TestAggregateService_ProcessConceptUpdate_ContextTimeout(t *testing.T) {
 
 	svc, s3mock, _, _, _, _, _ := setupTestServiceWithTimeout(200, payload, time.Millisecond*10)
 	s3mock.callsMocked = true
-	s3mock.On("GetConceptAndTransactionID", "test-uuid").Return(false, transform.OldConcept{}, "", nil).After(time.Second * 1)
+	s3mock.On("GetConceptAndTransactionID", "fb9fd611-0822-4283-b1b2-e691804ec5d5").Return(false, transform.OldConcept{}, "", nil).After(time.Second * 1)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	update := sqs.ConceptUpdate{
-		UUID: "test-uuid",
+		UUID: "fb9fd611-0822-4283-b1b2-e691804ec5d5",
 	}
 	err := svc.processConceptUpdate(ctx, update)
 	assert.EqualError(t, err, "context deadline exceeded")
@@ -199,7 +200,7 @@ func TestAggregateService_GetConcordedConcept_Location(t *testing.T) {
 func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
 	expectedConcept := transform.OldAggregatedConcept{
-		PrefUUID:  "FR_ML_UUID",
+		PrefUUID:  "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 		PrefLabel: "France",
 		Type:      "Location",
 		Aliases:   []string{"France", "French Republic"},
@@ -214,17 +215,17 @@ func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.
 				Type:           "Location",
 			},
 			{
-				UUID:           "FR_ML_UUID",
+				UUID:           "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 				PrefLabel:      "France",
 				Authority:      "ManagedLocation",
-				AuthorityValue: "FR_ML_UUID",
+				AuthorityValue: "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 				Type:           "Location",
 				ISO31661:       "FR",
 			},
 		},
 	}
 
-	c, tid, err := getConceptFromService(svc, context.Background(), "FR_ML_UUID", "")
+	c, tid, err := getConceptFromService(svc, context.Background(), "c78371f2-1f55-4099-ae63-f44e44bb2af8", "")
 	sort.Strings(expectedConcept.Aliases)
 	assert.NoError(t, err)
 	assert.Equal(t, "tid_112", tid)
@@ -234,7 +235,7 @@ func TestAggregateService_GetConcordedConcept_ManagedLocationCountry(t *testing.
 func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
 	expectedConcept := transform.OldAggregatedConcept{
-		PrefUUID:  "BE_SL_UUID",
+		PrefUUID:  "cc3bf637-9288-499b-9221-bb6e8e003f03",
 		PrefLabel: "Belgium",
 		Type:      "Location",
 		Aliases:   []string{"Belgium", "Kingdom of Belgium", "Royaume de Belgique"},
@@ -257,16 +258,48 @@ func TestAggregateService_GetConcordedConcept_SmartlogicCountry(t *testing.T) {
 				Type:           "Location",
 			},
 			{
-				UUID:           "BE_SL_UUID",
+				UUID:           "cc3bf637-9288-499b-9221-bb6e8e003f03",
 				PrefLabel:      "Belgium",
 				Authority:      "Smartlogic",
-				AuthorityValue: "BE_SL_UUID",
+				AuthorityValue: "cc3bf637-9288-499b-9221-bb6e8e003f03",
 				Type:           "Location",
 			},
 		},
 	}
 
-	c, tid, err := getConceptFromService(svc, context.Background(), "BE_SL_UUID", "")
+	c, tid, err := getConceptFromService(svc, context.Background(), "cc3bf637-9288-499b-9221-bb6e8e003f03", "")
+	sort.Strings(expectedConcept.Aliases)
+	sort.Slice(c.SourceRepresentations, func(i, j int) bool {
+		return c.SourceRepresentations[i].UUID < c.SourceRepresentations[j].UUID
+	})
+	sort.Slice(expectedConcept.SourceRepresentations, func(i, j int) bool {
+		return expectedConcept.SourceRepresentations[i].UUID < expectedConcept.SourceRepresentations[j].UUID
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "tid_358", tid)
+	assert.Equal(t, expectedConcept, c)
+}
+
+func TestAggregateService_GetExternalConcordedConcept(t *testing.T) {
+	svc, _, _, _, _, _, _ := setupTestService(200, payload)
+	expectedConcept := transform.OldAggregatedConcept{
+		PrefUUID:  "f3633e04-2ee3-48ce-8081-37734dab3fdc",
+		PrefLabel: "Capital Flows",
+		Type:      "ExternalConcept",
+		Aliases:   []string{"Capital Flows"},
+		SourceRepresentations: []transform.OldConcept{
+			{
+				UUID:           "f3633e04-2ee3-48ce-8081-37734dab3fdc",
+				PrefLabel:      "Capital Flows",
+				Authority:      "929da855-c1ba-4576-89c1-5c3ec9e4c6ef",
+				AuthorityValue: "f3633e04-2ee3-48ce-8081-37734dab3fdc",
+				Type:           "ExternalConcept",
+			},
+		},
+	}
+
+	c, tid, err := getConceptFromService(svc, context.Background(), "929da855-c1ba-4576-89c1-5c3ec9e4c6ef-f3633e04-2ee3-48ce-8081-37734dab3fdc", "")
 	sort.Strings(expectedConcept.Aliases)
 	sort.Slice(c.SourceRepresentations, func(i, j int) bool {
 		return c.SourceRepresentations[i].UUID < c.SourceRepresentations[j].UUID
@@ -713,7 +746,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany(t *testing.T) {
 func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
 	expectedConcept := transform.OldAggregatedConcept{
-		PrefUUID:  "Organisation_WithNAICSCodes_Smartlogic_UUID",
+		PrefUUID:  "1b72a837-b6a6-4490-85e2-c174101bfa10",
 		Type:      "PublicCompany",
 		PrefLabel: "Apple, Inc.",
 		Aliases: []string{
@@ -764,7 +797,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *te
 				},
 			},
 			{
-				UUID:           "Organisation_WithNAICSCodes_Smartlogic_UUID",
+				UUID:           "1b72a837-b6a6-4490-85e2-c174101bfa10",
 				Type:           "PublicCompany",
 				Authority:      "Smartlogic",
 				AuthorityValue: "000C7F-E",
@@ -772,7 +805,7 @@ func TestAggregateService_GetConcordedConcept_PublicCompany_WithNAICSCodes(t *te
 			},
 		},
 	}
-	c, tid, err := getConceptFromService(svc, context.Background(), "Organisation_WithNAICSCodes_Smartlogic_UUID", "")
+	c, tid, err := getConceptFromService(svc, context.Background(), "1b72a837-b6a6-4490-85e2-c174101bfa10", "")
 	sort.Strings(expectedConcept.FormerNames)
 	sort.Strings(expectedConcept.Aliases)
 	assert.NoError(t, err)
@@ -898,24 +931,24 @@ func TestAggregateService_GetConcordedConcept_Memberships(t *testing.T) {
 func TestAggregateService_GetConcordedConcept_IndustryClassification(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
 	expectedConcept := transform.OldAggregatedConcept{
-		PrefUUID:           "IndustryClassification_Smartlogic_UUID",
+		PrefUUID:           "acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 		PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 		Type:               "NAICSIndustryClassification",
 		Aliases:            []string{"Newspaper, Periodical, Book, and Directory Publishers"},
 		IndustryIdentifier: "5111",
 		SourceRepresentations: []transform.OldConcept{
 			{
-				UUID:               "IndustryClassification_Smartlogic_UUID",
+				UUID:               "acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 				PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 				IndustryIdentifier: "5111",
 				Authority:          "Smartlogic",
-				AuthorityValue:     "IndustryClassification_Smartlogic_UUID",
+				AuthorityValue:     "acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 				Type:               "NAICSIndustryClassification",
 			},
 		},
 	}
 
-	c, tid, err := getConceptFromService(svc, context.Background(), "IndustryClassification_Smartlogic_UUID", "")
+	c, tid, err := getConceptFromService(svc, context.Background(), "acb19f07-bfd0-4301-a96f-ab5e5c20e533", "")
 	sort.Strings(expectedConcept.Aliases)
 	assert.NoError(t, err)
 	assert.Equal(t, "tid_359", tid)
@@ -1021,10 +1054,10 @@ func TestAggregateService_ProcessMessage_SmartlogicMembershipSentToEs(t *testing
 
 func TestAggregateService_ProcessMessage_IndustryClassificationNotSentToEs(t *testing.T) {
 	svc, _, _, eventQueue, _, _, _ := setupTestService(200, payload)
-	err := svc.ProcessMessage(context.Background(), "IndustryClassification_Smartlogic_UUID", "")
+	err := svc.ProcessMessage(context.Background(), "acb19f07-bfd0-4301-a96f-ab5e5c20e533", "")
 	mockWriter := svc.httpClient.(*mockHTTPClient)
 	assert.Equal(t, []string{
-		"concepts-rw-neo4j/industry-classifications/IndustryClassification_Smartlogic_UUID",
+		"concepts-rw-neo4j/industry-classifications/acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 		"varnish-purger/purge?target=%2Fthings%2F28090964-9997-4bc2-9638-7a11135aaff9&target=%2Fconcepts" +
 			"%2F28090964-9997-4bc2-9638-7a11135aaff9&target=%2Fthings%2F34a571fb-d779-4610-a7ba-2e127676db4d" +
 			"&target=%2Fconcepts%2F34a571fb-d779-4610-a7ba-2e127676db4d",
@@ -1542,13 +1575,13 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:             "Membership",
 					PersonUUID:       "3b961db6-02c1-4fde-b96d-aefd339a02a6",
 					OrganisationUUID: "064ce159-8835-3426-b456-c86d48de8511",
-					InceptionDate:    "2000-01-01",
+					InceptionDate:    inceptionDate,
 					TerminationDate:  "2009-12-31",
 					MembershipRoles: []transform.MembershipRole{
 						{
 
 							RoleUUID:        "344fdb1d-0585-31f7-814f-b478e54dbe1f",
-							InceptionDate:   "2000-01-01",
+							InceptionDate:   inceptionDate,
 							TerminationDate: "2009-12-31",
 						},
 					},
@@ -1618,13 +1651,13 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:           "Location",
 				},
 			},
-			"FR_ML_UUID": {
+			"c78371f2-1f55-4099-ae63-f44e44bb2af8": { // FR_ML_UUID
 				transactionID: "tid_112",
 				concept: transform.OldConcept{
-					UUID:           "FR_ML_UUID",
+					UUID:           "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 					PrefLabel:      "France",
 					Authority:      "ManagedLocation",
-					AuthorityValue: "FR_ML_UUID",
+					AuthorityValue: "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 					Type:           "Location",
 					ISO31661:       "FR",
 				},
@@ -1639,13 +1672,13 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:           "Location",
 				},
 			},
-			"BE_SL_UUID": {
+			"cc3bf637-9288-499b-9221-bb6e8e003f03": { // BE_SL_UUID
 				transactionID: "tid_358",
 				concept: transform.OldConcept{
-					UUID:           "BE_SL_UUID",
+					UUID:           "cc3bf637-9288-499b-9221-bb6e8e003f03",
 					PrefLabel:      "Belgium",
 					Authority:      "Smartlogic",
-					AuthorityValue: "BE_SL_UUID",
+					AuthorityValue: "cc3bf637-9288-499b-9221-bb6e8e003f03",
 					Type:           "Location",
 				},
 			},
@@ -1670,14 +1703,14 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Type:           "Location",
 				},
 			},
-			"IndustryClassification_Smartlogic_UUID": {
+			"acb19f07-bfd0-4301-a96f-ab5e5c20e533": {
 				transactionID: "tid_359",
 				concept: transform.OldConcept{
-					UUID:               "IndustryClassification_Smartlogic_UUID",
+					UUID:               "acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 					PrefLabel:          "Newspaper, Periodical, Book, and Directory Publishers",
 					IndustryIdentifier: "5111",
 					Authority:          "Smartlogic",
-					AuthorityValue:     "IndustryClassification_Smartlogic_UUID",
+					AuthorityValue:     "acb19f07-bfd0-4301-a96f-ab5e5c20e533",
 					Type:               "NAICSIndustryClassification",
 				},
 			},
@@ -1709,10 +1742,10 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					},
 				},
 			},
-			"Organisation_WithNAICSCodes_Smartlogic_UUID": {
+			"1b72a837-b6a6-4490-85e2-c174101bfa10": { //Organisation_WithNAICSCodes_Smartlogic_UUID
 				transactionID: "tid_736",
 				concept: transform.OldConcept{
-					UUID:           "Organisation_WithNAICSCodes_Smartlogic_UUID",
+					UUID:           "1b72a837-b6a6-4490-85e2-c174101bfa10",
 					Type:           "PublicCompany",
 					Authority:      "Smartlogic",
 					AuthorityValue: "000C7F-E",
@@ -1721,6 +1754,25 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			},
 		},
 	}
+
+	externalS3Mock := &mockS3Client{
+		concepts: map[string]struct {
+			transactionID string
+			concept       transform.OldConcept
+		}{
+			"929da855-c1ba-4576-89c1-5c3ec9e4c6ef-f3633e04-2ee3-48ce-8081-37734dab3fdc": {
+				transactionID: "tid_358",
+				concept: transform.OldConcept{
+					UUID:           "f3633e04-2ee3-48ce-8081-37734dab3fdc",
+					PrefLabel:      "Capital Flows",
+					Authority:      "929da855-c1ba-4576-89c1-5c3ec9e4c6ef",
+					AuthorityValue: "f3633e04-2ee3-48ce-8081-37734dab3fdc",
+					Type:           "ExternalConcept",
+				},
+			},
+		},
+	}
+
 	conceptsQueue := &mockSQSClient{
 		conceptsQueue: map[string]string{
 			"1": "99247059-04ec-3abb-8693-a0b8951fdcab",
@@ -1739,9 +1791,9 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Authority: "TME",
 				},
 			},
-			"FR_ML_UUID": {
+			"c78371f2-1f55-4099-ae63-f44e44bb2af8": {
 				{
-					UUID:      "FR_ML_UUID",
+					UUID:      "c78371f2-1f55-4099-ae63-f44e44bb2af8",
 					Authority: "ManagedLocation",
 				},
 				{
@@ -1749,9 +1801,9 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Authority: "TME",
 				},
 			},
-			"BE_SL_UUID": {
+			"cc3bf637-9288-499b-9221-bb6e8e003f03": { // BE_SL_UUID
 				{
-					UUID:      "BE_SL_UUID",
+					UUID:      "cc3bf637-9288-499b-9221-bb6e8e003f03",
 					Authority: "Smartlogic",
 				},
 				{
@@ -1819,9 +1871,9 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					Authority: "TME",
 				},
 			},
-			"Organisation_WithNAICSCodes_Smartlogic_UUID": {
+			"1b72a837-b6a6-4490-85e2-c174101bfa10": { // Organisation_WithNAICSCodes_Smartlogic_UUID
 				{
-					UUID:      "Organisation_WithNAICSCodes_Smartlogic_UUID",
+					UUID:      "1b72a837-b6a6-4490-85e2-c174101bfa10",
 					Authority: "Smartlogic",
 				},
 				{
@@ -1836,7 +1888,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 	feedback := make(chan bool)
 	done := make(chan struct{})
 
-	svc := NewService(s3mock, conceptsQueue, eventsSNS, concordClient, kinesis,
+	svc := NewService(s3mock, externalS3Mock, conceptsQueue, eventsSNS, concordClient, kinesis,
 		neo4jUrl,
 		esUrl,
 		varnishPurgerUrl,
