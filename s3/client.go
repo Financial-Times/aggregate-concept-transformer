@@ -70,10 +70,15 @@ func NewClient(bucketName string, awsRegion string) (*Client, error) {
 	}, err
 }
 
-func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
+func (c *Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
+	key := getKey(UUID)
+	if publication != "" {
+		key = strings.Join([]string{publication, key}, "/")
+	}
+
 	getObjectParams := &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
-		Key:    aws.String(getKey(UUID)),
+		Key:    aws.String(key),
 	}
 
 	resp, err := c.s3.GetObjectWithContext(ctx, getObjectParams)
@@ -90,7 +95,7 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (b
 
 	getHeadersParams := &s3.HeadObjectInput{
 		Bucket: aws.String(c.bucketName),
-		Key:    aws.String(getKey(UUID)),
+		Key:    aws.String(key),
 	}
 	ho, err := c.s3.HeadObjectWithContext(ctx, getHeadersParams)
 	if err != nil {

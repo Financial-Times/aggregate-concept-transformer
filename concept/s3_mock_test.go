@@ -2,6 +2,7 @@ package concept
 
 import (
 	"context"
+	"strings"
 
 	ontology "github.com/Financial-Times/cm-graph-ontology"
 	"github.com/Financial-Times/cm-graph-ontology/transform"
@@ -19,12 +20,17 @@ type mockS3Client struct {
 	callsMocked bool
 }
 
-func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
+func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
 	if s.callsMocked {
 		s.Called(UUID)
 	}
 
-	c, ok := s.concepts[UUID]
+	key := UUID
+	if publication != "" {
+		key = strings.Join([]string{publication, UUID}, "/")
+	}
+
+	c, ok := s.concepts[key]
 	if !ok {
 		return false, ontology.NewConcept{}, "", s.err
 	}

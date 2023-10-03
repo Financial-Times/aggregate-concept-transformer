@@ -112,7 +112,7 @@ func TestAggregateService_ListenForNotifications_ProcessConceptNotInS3(t *testin
 	mockSqsClient.conceptsQueue[receiptHandle] = nonExistingConcept
 	go svc.ListenForNotifications(context.Background(), 1)
 	time.Sleep(500 * time.Microsecond)
-	hasIt, _, _, err := s3mock.GetConceptAndTransactionID(context.Background(), nonExistingConcept)
+	hasIt, _, _, err := s3mock.GetConceptAndTransactionID(context.Background(), "", nonExistingConcept)
 	assert.Equal(t, hasIt, false)
 	assert.NoError(t, err)
 	err = mockSqsClient.RemoveMessageFromQueue(context.Background(), &receiptHandle)
@@ -1760,7 +1760,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 			transactionID string
 			concept       transform.OldConcept
 		}{
-			"929da855-c1ba-4576-89c1-5c3ec9e4c6ef-f3633e04-2ee3-48ce-8081-37734dab3fdc": {
+			"929da855-c1ba-4576-89c1-5c3ec9e4c6ef/f3633e04-2ee3-48ce-8081-37734dab3fdc": {
 				transactionID: "tid_358",
 				concept: transform.OldConcept{
 					UUID:           "f3633e04-2ee3-48ce-8081-37734dab3fdc",

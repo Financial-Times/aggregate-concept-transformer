@@ -83,7 +83,7 @@ func (r *systemHealth) processChannel() {
 }
 
 type normalisedClient interface {
-	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error)
+	GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error)
 	Healthcheck() fthealth.Check
 }
 
@@ -376,7 +376,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	var err error
 	sourceConcepts := []ontology.NewConcept{}
 
-	cleanedUUID, externalAuthority, err := extractIdentifiersFromKey(UUID)
+	cleanedUUID, publication, err := extractIdentifiersFromKey(UUID)
 	if err != nil {
 		return ontology.NewAggregatedConcept{}, "", err
 	}
@@ -399,10 +399,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		for _, conc := range concordanceRecords {
 			var found bool
 			var sourceConcept ontology.NewConcept
-			if externalAuthority != "" {
-				found, sourceConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, strings.Join([]string{externalAuthority, conc.UUID}, "-"))
+			if publication != "" {
+				found, sourceConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, publication, conc.UUID)
 			} else {
-				found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
+				found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, "", conc.UUID)
 			}
 
 			if err != nil {
@@ -426,10 +426,10 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		if externalAuthority != "" {
-			foundPrimary, primaryConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, strings.Join([]string{externalAuthority, canonicalConcept.UUID}, "-"))
+		if publication != "" {
+			foundPrimary, primaryConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, publication, canonicalConcept.UUID)
 		} else {
-			foundPrimary, primaryConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+			foundPrimary, primaryConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, "", canonicalConcept.UUID)
 		}
 
 		if err != nil {

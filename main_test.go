@@ -148,7 +148,7 @@ type s3Mock struct {
 	concepts map[string]ontology.NewConcept
 }
 
-func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
+func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
 	concept, ok := s.concepts[UUID]
 	if !ok {
 		return false, ontology.NewConcept{}, "", errors.New("not found")

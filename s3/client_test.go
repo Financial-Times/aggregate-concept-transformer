@@ -32,7 +32,7 @@ func TestClient_GetConceptAndTransactionID(t *testing.T) {
 		bucketName: testBucket,
 	}
 
-	has, concept, tid, err := client.GetConceptAndTransactionID(context.Background(), testKey)
+	has, concept, tid, err := client.GetConceptAndTransactionID(context.Background(), "", testKey)
 	if err != nil {
 		t.Fatal(err)
 	}
