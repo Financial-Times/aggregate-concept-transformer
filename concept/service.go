@@ -467,6 +467,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 func (s *AggregateService) Healthchecks() []fthealth.Check {
 	checks := []fthealth.Check{
 		s.nStore.Healthcheck(),
+		s.externalNormalisedStore.Healthcheck(),
 		s.concordances.Healthcheck(),
 	}
 	if !s.readOnly {

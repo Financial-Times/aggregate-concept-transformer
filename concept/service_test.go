@@ -79,7 +79,7 @@ const (
 
 func TestNewService(t *testing.T) {
 	svc, _, _, _, _, _, _ := setupTestService(200, payload)
-	assert.Equal(t, 7, len(svc.Healthchecks()))
+	assert.Equal(t, 8, len(svc.Healthchecks()))
 }
 
 func TestAggregateService_ListenForNotifications(t *testing.T) {

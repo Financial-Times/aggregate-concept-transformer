@@ -64,7 +64,7 @@ func TestHandlers(t *testing.T) {
 				},
 			},
 		},
-		"Get Concept - Not Found": {
+		"Get External Concept - Not Found": {
 			method:     "GET",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097?publication=8e6c705e-1132-42a2-8db0-c295e29e8658",
 			resultCode: 500,
@@ -73,7 +73,7 @@ func TestHandlers(t *testing.T) {
 			},
 			err: errors.New("Canonical concept not found in S3"),
 		},
-		"Get External Concept - Not Found": {
+		"Get Concept - Not Found": {
 			method:     "GET",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 			resultCode: 500,
