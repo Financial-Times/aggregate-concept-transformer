@@ -59,6 +59,17 @@ func main() {
 		Value:  "eu-west-1",
 		EnvVar: "BUCKET_REGION",
 	})
+	externalBucketName := app.String(cli.StringOpt{
+		Name:   "externalBucketName",
+		Desc:   "Bucket to read external concepts from.",
+		EnvVar: "EXTERNAL_BUCKET_NAME",
+	})
+	externalBucketRegion := app.String(cli.StringOpt{
+		Name:   "externalBucketRegion",
+		Desc:   "AWS Region in which the external S3 bucket is located",
+		Value:  "eu-west-1",
+		EnvVar: "EXTERNAL_BUCKET_REGION",
+	})
 	conceptUpdatesQueueURL := app.String(cli.StringOpt{
 		Name:   "conceptUpdatesQueueURL",
 		Desc:   "Url of AWS SQS queue to listen for concept updates",
@@ -178,6 +189,8 @@ func main() {
 			"CONCORDANCES_RW_ADDRESS": *concordancesReaderAddress,
 			"NEO_WRITER_ADDRESS":      *neoWriterAddress,
 			"VARNISH_PURGER_ADDRESS":  *varnishPurgerAddress,
+			"EXTERNAL_BUCKET_REGION":  *externalBucketRegion,
+			"EXTERNAL_BUCKET_NAME":    *externalBucketName,
 			"BUCKET_REGION":           *bucketRegion,
 			"BUCKET_NAME":             *bucketName,
 			"SQS_REGION":              *sqsRegion,
@@ -215,7 +228,12 @@ func main() {
 	app.Action = func() {
 		s3Client, err := s3.NewClient(*bucketName, *bucketRegion)
 		if err != nil {
-			logger.WithError(err).Fatal("Error creating S3 client")
+			logger.WithError(err).Fatal("Error creating S3 client for concept-normalised-store")
+		}
+
+		externalS3Client, err := s3.NewClient(*externalBucketName, *externalBucketRegion)
+		if err != nil {
+			logger.WithError(err).Fatal("Error creating S3 client for external-concept-normalised-store")
 		}
 
 		concordancesClient, err := concordances.NewClient(*concordancesReaderAddress)
@@ -254,6 +272,7 @@ func main() {
 		requestTimeout := time.Second * time.Duration(*httpTimeout)
 		svc := concept.NewService(
 			s3Client,
+			externalS3Client,
 			conceptUpdatesSqsClient,
 			eventsSNS,
 			concordancesClient,

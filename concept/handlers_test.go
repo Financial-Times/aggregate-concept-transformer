@@ -49,6 +49,30 @@ func TestHandlers(t *testing.T) {
 				},
 			},
 		},
+		"Get External Concept - Success": {
+			method:     "GET",
+			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097?publication=8e6c705e-1132-42a2-8db0-c295e29e8658",
+			resultCode: 200,
+			resultJSONBody: map[string]interface{}{
+				"prefUUID":  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+				"prefLabel": "TestConcept",
+			},
+			concepts: map[string]transform.OldAggregatedConcept{
+				"8e6c705e-1132-42a2-8db0-c295e29e8658-f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
+					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+					PrefLabel: "TestConcept",
+				},
+			},
+		},
+		"Get External Concept - Not Found": {
+			method:     "GET",
+			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097?publication=8e6c705e-1132-42a2-8db0-c295e29e8658",
+			resultCode: 500,
+			resultJSONBody: map[string]interface{}{
+				"message": "Canonical concept not found in S3",
+			},
+			err: errors.New("Canonical concept not found in S3"),
+		},
 		"Get Concept - Not Found": {
 			method:     "GET",
 			url:        "/concept/f7fd05ea-9999-47c0-9be9-c99dd84d0097",

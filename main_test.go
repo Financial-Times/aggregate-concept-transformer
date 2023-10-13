@@ -50,6 +50,9 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	s3 := s3Mock{
 		concepts: s3Concepts,
 	}
+	externalS3Mock := s3Mock{
+		concepts: s3Concepts,
+	}
 	// sqs and kinesis are currently not used in this test so no specifics
 	sqsClient := &sqsMock{}
 	snsClient := &snsMock{}
@@ -65,7 +68,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	defer close(feedback)
 	defer close(done)
 
-	service := concept.NewService(s3, sqsClient, snsClient, concordancesClient, ksClient, server.URL+"/neo4j", server.URL+"/elastic", server.URL+"/varnish", []string{""}, server.Client(), feedback, done, timeout, true)
+	service := concept.NewService(s3, externalS3Mock, sqsClient, snsClient, concordancesClient, ksClient, server.URL+"/neo4j", server.URL+"/elastic", server.URL+"/varnish", []string{""}, server.Client(), feedback, done, timeout, true)
 	handler := concept.NewHandler(service, timeout)
 
 	m := handler.RegisterHandlers(concept.NewHealthService(service, "", "", 8080, ""), false, feedback)
@@ -145,7 +148,7 @@ type s3Mock struct {
 	concepts map[string]ontology.NewConcept
 }
 
-func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error) {
+func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
 	concept, ok := s.concepts[UUID]
 	if !ok {
 		return false, ontology.NewConcept{}, "", errors.New("not found")

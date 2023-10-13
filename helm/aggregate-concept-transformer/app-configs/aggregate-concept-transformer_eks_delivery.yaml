@@ -8,5 +8,6 @@ env:
   LOG_LEVEL: info
   REQUEST_LOGGING_ON: true
   BUCKET_REGION: "eu-west-1"
+  EXTERNAL_BUCKET_REGION: "eu-west-1"
 waitTime: 20
 httpTimeout: 15

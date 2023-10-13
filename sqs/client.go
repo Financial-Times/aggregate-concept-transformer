@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-var keyMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
+var keyMatcher = regexp.MustCompile("[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}")
 
 type Client interface {
 	ListenAndServeQueue(ctx context.Context) []ConceptUpdate
@@ -106,15 +106,16 @@ func getNotificationsFromMessages(messages []*sqs.Message) []ConceptUpdate {
 			continue
 		}
 		key := msgRecord.Records[0].S3.Object.Key
-		if keyMatcher.MatchString(key) != true {
-			logger.WithField("key", key).Error("Key in message is not a valid UUID")
+		matches := keyMatcher.FindAllString(key, 2)
+
+		if matches == nil {
+			logger.WithField("key", key).Error("no valid UUID matches in the key")
 			continue
 		}
 
 		bookmark := msgRecord.Records[0].Bookmark
-
 		notifications = append(notifications, ConceptUpdate{
-			UUID:          strings.Replace(key, "/", "-", 4),
+			UUID:          strings.Replace(key, "/", "-", -1),
 			Bookmark:      bookmark, //no need to verify via regex, because neo4j might change the pattern..
 			ReceiptHandle: receiptHandle,
 		})

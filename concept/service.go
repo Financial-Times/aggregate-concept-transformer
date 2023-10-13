@@ -28,17 +28,21 @@ import (
 const (
 	thingsAPIEndpoint  = "/things"
 	conceptsAPIEnpoint = "/concepts"
+	lengthOfUUID       = 36
 )
 
-var irregularConceptTypePaths = map[string]string{
-	"AlphavilleSeries":            "alphaville-series",
-	"BoardRole":                   "membership-roles",
-	"Dummy":                       "dummies",
-	"Person":                      "people",
-	"PublicCompany":               "organisations",
-	"NAICSIndustryClassification": "industry-classifications",
-	"FTAnIIndustryClassification": "industry-classifications",
-}
+var (
+	irregularConceptTypePaths = map[string]string{
+		"AlphavilleSeries":            "alphaville-series",
+		"BoardRole":                   "membership-roles",
+		"Dummy":                       "dummies",
+		"Person":                      "people",
+		"PublicCompany":               "organisations",
+		"NAICSIndustryClassification": "industry-classifications",
+		"FTAnIIndustryClassification": "industry-classifications",
+	}
+	UUIDMatcher = regexp.MustCompile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+)
 
 type systemHealth struct {
 	sync.RWMutex
@@ -80,12 +84,13 @@ func (r *systemHealth) processChannel() {
 }
 
 type normalisedClient interface {
-	GetConceptAndTransactionID(ctx context.Context, UUID string) (bool, ontology.NewConcept, string, error)
+	GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error)
 	Healthcheck() fthealth.Check
 }
 
 type AggregateService struct {
 	nStore                          normalisedClient
+	externalNormalisedStore         normalisedClient
 	concordances                    concordances.Client
 	conceptUpdatesSqs               sqs.Client
 	eventsSns                       sns.Client
@@ -102,6 +107,7 @@ type AggregateService struct {
 
 func NewService(
 	S3Client normalisedClient,
+	ExternalS3Client normalisedClient,
 	conceptUpdatesSQSClient sqs.Client,
 	eventsSNSClient sns.Client,
 	concordancesClient concordances.Client,
@@ -126,6 +132,7 @@ func NewService(
 
 	return &AggregateService{
 		nStore:                          S3Client,
+		externalNormalisedStore:         ExternalS3Client,
 		concordances:                    concordancesClient,
 		conceptUpdatesSqs:               conceptUpdatesSQSClient,
 		eventsSns:                       eventsSNSClient,
@@ -221,6 +228,9 @@ func (s *AggregateService) ProcessMessage(ctx context.Context, UUID string, book
 	if err != nil {
 		return err
 	}
+
+	// Extract only the real UUID when publication is present, safe as the uuid is alway at least 36 characters
+	UUID = UUID[len(UUID)-lengthOfUUID:]
 	if concordedConcept.PrefUUID != UUID {
 		logger.WithTransactionID(transactionID).WithUUID(UUID).Infof("Requested concept %s is source node for canonical concept %s", UUID, concordedConcept.PrefUUID)
 	}
@@ -370,11 +380,15 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	var err error
 	sourceConcepts := []ontology.NewConcept{}
 
-	concordedRecords, err := s.concordances.GetConcordance(ctx, UUID, bookmark)
+	cleanedUUID, publication, err := extractIdentifiersFromKey(UUID)
 	if err != nil {
 		return ontology.NewAggregatedConcept{}, "", err
 	}
-	logger.WithField("UUID", UUID).Debugf("Returned concordance record: %v", concordedRecords)
+	concordedRecords, err := s.concordances.GetConcordance(ctx, cleanedUUID, bookmark)
+	if err != nil {
+		return ontology.NewAggregatedConcept{}, "", err
+	}
+	logger.WithField("UUID", cleanedUUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
@@ -389,14 +403,19 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		for _, conc := range concordanceRecords {
 			var found bool
 			var sourceConcept ontology.NewConcept
-			found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, conc.UUID)
+			if publication != "" {
+				found, sourceConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, publication, conc.UUID)
+			} else {
+				found, sourceConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, "", conc.UUID)
+			}
+
 			if err != nil {
 				return ontology.NewAggregatedConcept{}, "", err
 			}
 
 			if !found {
 				//we should let the concorded concept to be written as a "Thing"
-				logger.WithField("UUID", UUID).Warn(fmt.Sprintf("Source concept %s not found in S3", conc))
+				logger.WithField("UUID", cleanedUUID).Warn(fmt.Sprintf("Source concept %s not found in S3", conc))
 				sourceConcept.Authority = authority
 				sourceConcept.AuthorityValue = conc.AuthorityValue
 				sourceConcept.UUID = conc.UUID
@@ -411,12 +430,17 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
-		foundPrimary, primaryConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, canonicalConcept.UUID)
+		if publication != "" {
+			foundPrimary, primaryConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, publication, canonicalConcept.UUID)
+		} else {
+			foundPrimary, primaryConcept, transactionID, err = s.nStore.GetConceptAndTransactionID(ctx, "", canonicalConcept.UUID)
+		}
+
 		if err != nil {
 			return ontology.NewAggregatedConcept{}, "", err
 		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
-			logger.WithField("UUID", UUID).Error(err.Error())
+			logger.WithField("UUID", cleanedUUID).Error(err.Error())
 			return ontology.NewAggregatedConcept{}, "", err
 		}
 	}
@@ -443,6 +467,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 func (s *AggregateService) Healthchecks() []fthealth.Check {
 	checks := []fthealth.Check{
 		s.nStore.Healthcheck(),
+		s.externalNormalisedStore.Healthcheck(),
 		s.concordances.Healthcheck(),
 	}
 	if !s.readOnly {
@@ -453,6 +478,19 @@ func (s *AggregateService) Healthchecks() []fthealth.Check {
 		checks = append(checks, s.kinesis.Healthcheck())
 	}
 	return checks
+}
+
+func extractIdentifiersFromKey(uuid string) (string, string, error) {
+	matches := UUIDMatcher.FindAllString(uuid, 2)
+	if matches == nil {
+		return "", "", fmt.Errorf("error while extracting identificators from key: %s", uuid)
+	}
+
+	if len(matches) > 1 {
+		return matches[1], matches[0], nil
+	}
+
+	return matches[0], "", nil
 }
 
 func sendToPurger(ctx context.Context, client httpClient, baseURL string, conceptUUIDs []string, conceptType string, conceptTypesWithPublicEndpoints []string, tid string) error {
