@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
@@ -17,11 +16,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
 )
 
 type aggregateService interface {
 	ProcessMessage(ctx context.Context, UUID string, bookmark string) error
-	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error)
+	GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.CanonicalConcept, string, error)
 }
 
 type AggregateConceptHandler struct {
@@ -62,9 +63,9 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(concept)
 }
 
-func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ontology.NewAggregatedConcept, string, error) {
+func (h *AggregateConceptHandler) getConcordedConcept(ctx context.Context, UUID string) (ontology.CanonicalConcept, string, error) {
 	type concordedTransaction struct {
-		Concept       ontology.NewAggregatedConcept
+		Concept       ontology.CanonicalConcept
 		TransactionID string
 		Err           error
 	}

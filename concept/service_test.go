@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Financial-Times/cm-graph-ontology/transform"
+	"github.com/Financial-Times/cm-graph-ontology/v2/transform"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
@@ -286,7 +286,7 @@ func TestAggregateService_GetExternalConcordedConcept(t *testing.T) {
 	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:  "f3633e04-2ee3-48ce-8081-37734dab3fdc",
 		PrefLabel: "Capital Flows",
-		Type:      "ExternalConcept",
+		Type:      "TestConcept",
 		Aliases:   []string{"Capital Flows"},
 		SourceRepresentations: []transform.OldConcept{
 			{
@@ -294,7 +294,7 @@ func TestAggregateService_GetExternalConcordedConcept(t *testing.T) {
 				PrefLabel:      "Capital Flows",
 				Authority:      "929da855-c1ba-4576-89c1-5c3ec9e4c6ef",
 				AuthorityValue: "f3633e04-2ee3-48ce-8081-37734dab3fdc",
-				Type:           "ExternalConcept",
+				Type:           "TestConcept",
 			},
 		},
 	}
@@ -318,7 +318,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaff9",
 		PrefLabel:       "Root Concept",
-		Type:            "Person",
+		Type:            "TestConcept",
 		Aliases:         []string{"TME Concept", "Root Concept"},
 		EmailAddress:    "person123@ft.com",
 		FacebookPage:    "facebook/smartlogicPerson",
@@ -345,7 +345,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 				PrefLabel:      "TME Concept",
 				Authority:      "TME",
 				AuthorityValue: "TME-123",
-				Type:           "Person",
+				Type:           "TestConcept",
 				IsDeprecated:   true,
 			},
 			{
@@ -353,7 +353,7 @@ func TestAggregateService_GetConcordedConcept_TMEConcordance(t *testing.T) {
 				PrefLabel:       "Root Concept",
 				Authority:       "Smartlogic",
 				AuthorityValue:  "28090964-9997-4bc2-9638-7a11135aaff9",
-				Type:            "Person",
+				Type:            "TestConcept",
 				FacebookPage:    "facebook/smartlogicPerson",
 				TwitterHandle:   "@FtSmartlogicPerson",
 				ScopeNote:       "This note is in scope",
@@ -388,7 +388,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf10",
 		PrefLabel:       "Root Concept",
-		Type:            "Person",
+		Type:            "TestConcept",
 		Aliases:         []string{"TME Concept", "Root Concept"},
 		EmailAddress:    "person123@ft.com",
 		FacebookPage:    "facebook/smartlogicPerson",
@@ -415,7 +415,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 				PrefLabel:      "TME Concept",
 				Authority:      "TME",
 				AuthorityValue: "TME-123",
-				Type:           "Person",
+				Type:           "TestConcept",
 				IsDeprecated:   false,
 			},
 			{
@@ -423,7 +423,7 @@ func TestAggregateService_GetConcordedConcept_DeprecatedSmartlogic(t *testing.T)
 				PrefLabel:       "Root Concept",
 				Authority:       "Smartlogic",
 				AuthorityValue:  "28090964-9997-4bc2-9638-7a11135aaf10",
-				Type:            "Person",
+				Type:            "TestConcept",
 				FacebookPage:    "facebook/smartlogicPerson",
 				TwitterHandle:   "@FtSmartlogicPerson",
 				ScopeNote:       "This note is in scope",
@@ -459,7 +459,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 	expectedConcept := transform.OldAggregatedConcept{
 		PrefUUID:        "28090964-9997-4bc2-9638-7a11135aaf11",
 		PrefLabel:       "Root Concept",
-		Type:            "Person",
+		Type:            "TestConcept",
 		Aliases:         []string{"Root Concept"},
 		EmailAddress:    "person123@ft.com",
 		FacebookPage:    "facebook/smartlogicPerson",
@@ -489,7 +489,7 @@ func TestAggregateService_GetConcordedConcept_SupersededConcept(t *testing.T) {
 				PrefLabel:       "Root Concept",
 				Authority:       "Smartlogic",
 				AuthorityValue:  "28090964-9997-4bc2-9638-7a11135aaf11",
-				Type:            "Person",
+				Type:            "TestConcept",
 				FacebookPage:    "facebook/smartlogicPerson",
 				TwitterHandle:   "@FtSmartlogicPerson",
 				ScopeNote:       "This note is in scope",
@@ -960,14 +960,12 @@ func TestAggregateService_ProcessMessage_Success(t *testing.T) {
 	err := svc.ProcessMessage(context.Background(), "28090964-9997-4bc2-9638-7a11135aaff9", "")
 	mockWriter := svc.httpClient.(*mockHTTPClient)
 	assert.Equal(t, []string{
-		"concepts-rw-neo4j/people/28090964-9997-4bc2-9638-7a11135aaff9",
+		"concepts-rw-neo4j/test-concepts/28090964-9997-4bc2-9638-7a11135aaff9",
 		"varnish-purger/purge?target=%2Fthings%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Fconcepts%2F28090964-9997-4bc2-9638-7a11135aaff9" +
 			"&target=%2Fthings%2F34a571fb-d779-4610-a7ba-2e127676db4d" +
-			"&target=%2Fconcepts%2F34a571fb-d779-4610-a7ba-2e127676db4d" +
-			"&target=%2Fpeople%2F28090964-9997-4bc2-9638-7a11135aaff9" +
-			"&target=%2Fpeople%2F34a571fb-d779-4610-a7ba-2e127676db4d",
-		"concept-rw-elasticsearch/people/28090964-9997-4bc2-9638-7a11135aaff9",
+			"&target=%2Fconcepts%2F34a571fb-d779-4610-a7ba-2e127676db4d",
+		"concept-rw-elasticsearch/test-concepts/28090964-9997-4bc2-9638-7a11135aaff9",
 	}, mockWriter.called)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(eventQueue.eventList))
@@ -1144,7 +1142,7 @@ func TestAggregateService_ProcessMessage_GenericWriterError(t *testing.T) {
 
 	err := svc.ProcessMessage(context.Background(), "28090964-9997-4bc2-9638-7a11135aaff9", "")
 	assert.Error(t, err)
-	assert.Equal(t, "Request to concepts-rw-neo4j/people/28090964-9997-4bc2-9638-7a11135aaff9 returned status: 503; skipping 28090964-9997-4bc2-9638-7a11135aaff9", err.Error())
+	assert.Equal(t, "Request to concepts-rw-neo4j/test-concepts/28090964-9997-4bc2-9638-7a11135aaff9 returned status: 503; skipping 28090964-9997-4bc2-9638-7a11135aaff9", err.Error())
 }
 
 func TestAggregateService_ProcessMessage_GenericSqsError(t *testing.T) {
@@ -1344,7 +1342,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "Root Concept",
 					Authority:      "Smartlogic",
 					AuthorityValue: "28090964-9997-4bc2-9638-7a11135aaff9",
-					Type:           "Person",
+					Type:           "TestConcept",
 					FacebookPage:   "facebook/smartlogicPerson",
 					TwitterHandle:  "@FtSmartlogicPerson",
 					ScopeNote:      "This note is in scope",
@@ -1372,7 +1370,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "TME Concept",
 					Authority:      "TME",
 					AuthorityValue: "TME-123",
-					Type:           "Person",
+					Type:           "TestConcept",
 					IsDeprecated:   true,
 				},
 			},
@@ -1383,7 +1381,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "Root Concept",
 					Authority:      "Smartlogic",
 					AuthorityValue: "28090964-9997-4bc2-9638-7a11135aaf10",
-					Type:           "Person",
+					Type:           "TestConcept",
 					FacebookPage:   "facebook/smartlogicPerson",
 					TwitterHandle:  "@FtSmartlogicPerson",
 					ScopeNote:      "This note is in scope",
@@ -1412,7 +1410,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "TME Concept",
 					Authority:      "TME",
 					AuthorityValue: "TME-123",
-					Type:           "Person",
+					Type:           "TestConcept",
 					IsDeprecated:   false,
 				},
 			},
@@ -1423,7 +1421,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "Root Concept",
 					Authority:      "Smartlogic",
 					AuthorityValue: "28090964-9997-4bc2-9638-7a11135aaf11",
-					Type:           "Person",
+					Type:           "TestConcept",
 					FacebookPage:   "facebook/smartlogicPerson",
 					TwitterHandle:  "@FtSmartlogicPerson",
 					ScopeNote:      "This note is in scope",
@@ -1767,7 +1765,7 @@ func setupTestServiceWithTimeout(clientStatusCode int, writerResponse string, ti
 					PrefLabel:      "Capital Flows",
 					Authority:      "929da855-c1ba-4576-89c1-5c3ec9e4c6ef",
 					AuthorityValue: "f3633e04-2ee3-48ce-8081-37734dab3fdc",
-					Type:           "ExternalConcept",
+					Type:           "TestConcept",
 				},
 			},
 		},

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
 )
 
 type Client struct {
@@ -70,7 +71,7 @@ func NewClient(bucketName string, awsRegion string) (*Client, error) {
 	}, err
 }
 
-func (c *Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
+func (c *Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.SourceConcept, string, error) {
 	key := getKey(UUID)
 	if publication != "" {
 		key = strings.Join([]string{publication, key}, "/")
@@ -86,10 +87,10 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, publication str
 		e, ok := err.(awserr.Error)
 		if ok && e.Code() == "NoSuchKey" {
 			// NotFound rather than error, so no logging needed.
-			return false, ontology.NewConcept{}, "", nil
+			return false, ontology.SourceConcept{}, "", nil
 		}
 		logger.WithError(err).WithUUID(UUID).Error("Error retrieving concept from S3")
-		return false, ontology.NewConcept{}, "", err
+		return false, ontology.SourceConcept{}, "", err
 	}
 	defer resp.Body.Close()
 
@@ -100,14 +101,14 @@ func (c *Client) GetConceptAndTransactionID(ctx context.Context, publication str
 	ho, err := c.s3.HeadObjectWithContext(ctx, getHeadersParams)
 	if err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot access S3 head object")
-		return false, ontology.NewConcept{}, "", err
+		return false, ontology.SourceConcept{}, "", err
 	}
 	tid := ho.Metadata["Transaction_id"]
 
-	var concept ontology.NewConcept
+	var concept ontology.SourceConcept
 	if err = json.NewDecoder(resp.Body).Decode(&concept); err != nil {
 		logger.WithError(err).WithUUID(UUID).Error("Cannot unmarshal object into a concept")
-		return true, ontology.NewConcept{}, "", err
+		return true, ontology.SourceConcept{}, "", err
 	}
 	return true, concept, *tid, nil
 }
