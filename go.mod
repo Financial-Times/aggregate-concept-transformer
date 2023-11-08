@@ -1,9 +1,9 @@
 module github.com/Financial-Times/aggregate-concept-transformer
 
-go 1.20
+go 1.21
 
 require (
-	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.0
+	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.2
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
 	github.com/Financial-Times/go-logger v0.0.0-20180323124113-febee6537e90
 	github.com/Financial-Times/http-handlers-go v0.0.0-20180517120644-2c20324ab887
@@ -31,7 +31,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
