@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Financial-Times/cm-graph-ontology/transform"
+	"github.com/Financial-Times/cm-graph-ontology/v2/transform"
 )
 
 func TestClient_GetConceptAndTransactionID(t *testing.T) {

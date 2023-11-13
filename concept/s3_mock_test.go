@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
-	ontology "github.com/Financial-Times/cm-graph-ontology"
-	"github.com/Financial-Times/cm-graph-ontology/transform"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/mock"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
+	"github.com/Financial-Times/cm-graph-ontology/v2/transform"
 )
 
 type mockS3Client struct {
@@ -20,7 +21,7 @@ type mockS3Client struct {
 	callsMocked bool
 }
 
-func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
+func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.SourceConcept, string, error) {
 	if s.callsMocked {
 		s.Called(UUID)
 	}
@@ -32,12 +33,12 @@ func (s *mockS3Client) GetConceptAndTransactionID(ctx context.Context, publicati
 
 	c, ok := s.concepts[key]
 	if !ok {
-		return false, ontology.NewConcept{}, "", s.err
+		return false, ontology.SourceConcept{}, "", s.err
 	}
 
 	concept, err := transform.ToNewSourceConcept(c.concept)
 	if err != nil {
-		return false, ontology.NewConcept{}, "", err
+		return false, ontology.SourceConcept{}, "", err
 	}
 	return true, concept, c.transactionID, s.err
 }

@@ -8,6 +8,8 @@
   "countryOfIncorporation": "GB",
   "countryOfOperations": "GB",
   "properName": "Scarlett Retail Group Ltd.",
+  "countryOfIncorporationUUID": ["6b683eff-56c3-43d9-acfc-7511d974fc01"],
+  "countryOfOperationsUUID": ["6b683eff-56c3-43d9-acfc-7511d974fc01"],
   "naicsIndustryClassifications": [
     {
       "uuid": "afc85187-7af3-4e85-9be2-ef7e1e9eec91",

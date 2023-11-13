@@ -12,10 +12,11 @@ import (
 	"testing"
 	"time"
 
-	ontology "github.com/Financial-Times/cm-graph-ontology"
-	"github.com/Financial-Times/cm-graph-ontology/transform"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/stretchr/testify/assert"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
+	"github.com/Financial-Times/cm-graph-ontology/v2/transform"
 
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 )
@@ -40,11 +41,13 @@ func TestHandlers(t *testing.T) {
 			resultCode: 200,
 			resultJSONBody: map[string]interface{}{
 				"prefUUID":  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+				"type":      "TestConcept",
 				"prefLabel": "TestConcept",
 			},
 			concepts: map[string]transform.OldAggregatedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+					Type:      "TestConcept",
 					PrefLabel: "TestConcept",
 				},
 			},
@@ -56,11 +59,13 @@ func TestHandlers(t *testing.T) {
 			resultJSONBody: map[string]interface{}{
 				"prefUUID":  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 				"prefLabel": "TestConcept",
+				"type":      "TestConcept",
 			},
 			concepts: map[string]transform.OldAggregatedConcept{
 				"8e6c705e-1132-42a2-8db0-c295e29e8658-f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
 					PrefLabel: "TestConcept",
+					Type:      "TestConcept",
 				},
 			},
 		},
@@ -92,6 +97,7 @@ func TestHandlers(t *testing.T) {
 			concepts: map[string]transform.OldAggregatedConcept{
 				"f7fd05ea-9999-47c0-9be9-c99dd84d0097": {
 					PrefUUID:  "f7fd05ea-9999-47c0-9be9-c99dd84d0097",
+					Type:      "TestConcept",
 					PrefLabel: "TestConcept",
 				},
 			},
@@ -206,17 +212,17 @@ func (s *MockService) ProcessMessage(ctx context.Context, UUID string, bookmark 
 	return nil
 }
 
-func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
+func (s *MockService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.CanonicalConcept, string, error) {
 	if s.err != nil {
-		return ontology.NewAggregatedConcept{}, "", s.err
+		return ontology.CanonicalConcept{}, "", s.err
 	}
 	c, ok := s.concepts[UUID]
 	if !ok {
-		return ontology.NewAggregatedConcept{}, "", errors.New("concept not found")
+		return ontology.CanonicalConcept{}, "", errors.New("concept not found")
 	}
-	newConcept, err := transform.ToNewAggregateConcept(c)
+	newConcept, err := transform.ToCanonicalConcept(c)
 	if err != nil {
-		return ontology.NewAggregatedConcept{}, "", err
+		return ontology.CanonicalConcept{}, "", err
 	}
 	return newConcept, "tid", nil
 }

@@ -16,13 +16,13 @@ import (
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
+	"github.com/Financial-Times/cm-graph-ontology/v2/aggregate"
+
 	"github.com/Financial-Times/aggregate-concept-transformer/concordances"
 	"github.com/Financial-Times/aggregate-concept-transformer/kinesis"
 	"github.com/Financial-Times/aggregate-concept-transformer/sns"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
-
-	ontology "github.com/Financial-Times/cm-graph-ontology"
-	"github.com/Financial-Times/cm-graph-ontology/aggregate"
 )
 
 const (
@@ -84,7 +84,7 @@ func (r *systemHealth) processChannel() {
 }
 
 type normalisedClient interface {
-	GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error)
+	GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.SourceConcept, string, error)
 	Healthcheck() fthealth.Check
 }
 
@@ -354,9 +354,9 @@ func bucketConcordances(concordanceRecords []concordances.ConcordanceRecord) (ma
 	return bucketedConcordances, primaryAuthority, nil
 }
 
-func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
+func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.CanonicalConcept, string, error) {
 	type concordedData struct {
-		Concept       ontology.NewAggregatedConcept
+		Concept       ontology.CanonicalConcept
 		TransactionID string
 		Err           error
 	}
@@ -370,29 +370,29 @@ func (s *AggregateService) GetConcordedConcept(ctx context.Context, UUID string,
 	case data := <-ch:
 		return data.Concept, data.TransactionID, data.Err
 	case <-ctx.Done():
-		return ontology.NewAggregatedConcept{}, "", ctx.Err()
+		return ontology.CanonicalConcept{}, "", ctx.Err()
 	}
 }
 
 // nolint: gocognit // TODO: fix 'cognitive complexity 21 of func `(*AggregateService).getConcordedConcept` is high (> 20) (gocognit)'
-func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.NewAggregatedConcept, string, error) {
+func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string, bookmark string) (ontology.CanonicalConcept, string, error) {
 	var transactionID string
 	var err error
-	sourceConcepts := []ontology.NewConcept{}
+	sourceConcepts := []ontology.SourceConcept{}
 
 	cleanedUUID, publication, err := extractIdentifiersFromKey(UUID)
 	if err != nil {
-		return ontology.NewAggregatedConcept{}, "", err
+		return ontology.CanonicalConcept{}, "", err
 	}
 	concordedRecords, err := s.concordances.GetConcordance(ctx, cleanedUUID, bookmark)
 	if err != nil {
-		return ontology.NewAggregatedConcept{}, "", err
+		return ontology.CanonicalConcept{}, "", err
 	}
 	logger.WithField("UUID", cleanedUUID).Debugf("Returned concordance record: %v", concordedRecords)
 
 	bucketedConcordances, primaryAuthority, err := bucketConcordances(concordedRecords)
 	if err != nil {
-		return ontology.NewAggregatedConcept{}, "", err
+		return ontology.CanonicalConcept{}, "", err
 	}
 
 	// Get all concepts from S3
@@ -402,7 +402,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 		for _, conc := range concordanceRecords {
 			var found bool
-			var sourceConcept ontology.NewConcept
+			var sourceConcept ontology.SourceConcept
 			if publication != "" {
 				found, sourceConcept, transactionID, err = s.externalNormalisedStore.GetConceptAndTransactionID(ctx, publication, conc.UUID)
 			} else {
@@ -410,7 +410,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			}
 
 			if err != nil {
-				return ontology.NewAggregatedConcept{}, "", err
+				return ontology.CanonicalConcept{}, "", err
 			}
 
 			if !found {
@@ -426,7 +426,7 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 	}
 
-	var primaryConcept ontology.NewConcept
+	var primaryConcept ontology.SourceConcept
 	var foundPrimary bool
 	if primaryAuthority != "" {
 		canonicalConcept := bucketedConcordances[primaryAuthority][0]
@@ -437,11 +437,11 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 		}
 
 		if err != nil {
-			return ontology.NewAggregatedConcept{}, "", err
+			return ontology.CanonicalConcept{}, "", err
 		} else if !foundPrimary {
 			err = fmt.Errorf("canonical concept %s not found in S3", canonicalConcept.UUID)
 			logger.WithField("UUID", cleanedUUID).Error(err.Error())
-			return ontology.NewAggregatedConcept{}, "", err
+			return ontology.CanonicalConcept{}, "", err
 		}
 	}
 
@@ -453,14 +453,14 @@ func (s *AggregateService) getConcordedConcept(ctx context.Context, UUID string,
 			// sanity check. concordances gathering should return 404 if there are no sources.
 			// we don't return an error in order to keep the same behavior as in v1.23 of the service.
 			logger.WithTransactionID(transactionID).WithUUID(UUID).Error("no sources found")
-			return ontology.NewAggregatedConcept{}, "", nil
+			return ontology.CanonicalConcept{}, "", nil
 		}
 		// set the primary concept to the last source concept to keep the behaviour the same as in v1.23
 		primaryConcept = sourceConcepts[sourceCount-1]
 		sourceConcepts = sourceConcepts[:sourceCount-1]
 	}
 
-	concordedConcept := aggregate.CreateAggregateConcept(primaryConcept, sourceConcepts)
+	concordedConcept := aggregate.CreateCanonicalConcept(primaryConcept, sourceConcepts)
 	return concordedConcept, transactionID, nil
 }
 
@@ -539,7 +539,7 @@ func contains(element string, types []string) bool {
 	return false
 }
 
-func sendToWriter(ctx context.Context, client httpClient, baseURL, urlParam, conceptUUID, tid string, concept ontology.NewAggregatedConcept) (sns.ConceptChanges, error) {
+func sendToWriter(ctx context.Context, client httpClient, baseURL, urlParam, conceptUUID, tid string, concept ontology.CanonicalConcept) (sns.ConceptChanges, error) {
 	updatedConcepts := sns.ConceptChanges{}
 	body, err := json.Marshal(concept)
 	if err != nil {
@@ -690,7 +690,7 @@ func (s *AggregateService) RWElasticsearchHealthCheck() fthealth.Check {
 	}
 }
 
-func isTypeAllowedInElastic(concordedConcept ontology.NewAggregatedConcept) bool {
+func isTypeAllowedInElastic(concordedConcept ontology.CanonicalConcept) bool {
 	switch concordedConcept.Type {
 	case "FinancialInstrument": //, "MembershipRole", "BoardRole":
 		return false
@@ -713,7 +713,7 @@ func isTypeAllowedInElastic(concordedConcept ontology.NewAggregatedConcept) bool
 	return true
 }
 
-func getPersonUUIDFromConcept(concept ontology.NewAggregatedConcept) (string, error) {
+func getPersonUUIDFromConcept(concept ontology.CanonicalConcept) (string, error) {
 	const personRelLabel = "HAS_MEMBER"
 	for _, rel := range concept.Relationships {
 		if rel.Label != personRelLabel {

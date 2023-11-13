@@ -20,8 +20,9 @@ import (
 	"github.com/Financial-Times/aggregate-concept-transformer/sns"
 	"github.com/Financial-Times/aggregate-concept-transformer/sqs"
 
-	ontology "github.com/Financial-Times/cm-graph-ontology"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+
+	ontology "github.com/Financial-Times/cm-graph-ontology/v2"
 )
 
 // service integration test
@@ -43,7 +44,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	defer server.Close()
 
 	// make sure that s3 will return the correct sources based on the setup data
-	s3Concepts := map[string]ontology.NewConcept{}
+	s3Concepts := map[string]ontology.SourceConcept{}
 	for _, s := range sources {
 		s3Concepts[s.UUID] = s
 	}
@@ -84,7 +85,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 		t.Fatal(http.StatusText(resp.StatusCode))
 	}
 
-	var actual ontology.NewAggregatedConcept
+	var actual ontology.CanonicalConcept
 	err = json.NewDecoder(resp.Body).Decode(&actual)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +94,7 @@ func TestAggregateService_GetConceptHandler(t *testing.T) {
 	compareAggregateConcepts(t, expected, actual)
 }
 
-func compareAggregateConcepts(t *testing.T, expected, actual ontology.NewAggregatedConcept) {
+func compareAggregateConcepts(t *testing.T, expected, actual ontology.CanonicalConcept) {
 	t.Helper()
 	opts := cmp.Options{
 		cmpopts.SortSlices(func(l, r ontology.Relationship) bool {
@@ -110,7 +111,7 @@ func compareAggregateConcepts(t *testing.T, expected, actual ontology.NewAggrega
 }
 
 // great place to use generics for readSourceConceptFixture and readAggregateConceptFixture
-func readSourceConceptFixture(t *testing.T, filename string) []ontology.NewConcept {
+func readSourceConceptFixture(t *testing.T, filename string) []ontology.SourceConcept {
 	t.Helper()
 
 	f, err := os.Open(filename)
@@ -119,7 +120,7 @@ func readSourceConceptFixture(t *testing.T, filename string) []ontology.NewConce
 	}
 	defer f.Close()
 
-	var result []ontology.NewConcept
+	var result []ontology.SourceConcept
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +128,7 @@ func readSourceConceptFixture(t *testing.T, filename string) []ontology.NewConce
 	return result
 }
 
-func readAggregateConceptFixture(t *testing.T, filename string) ontology.NewAggregatedConcept {
+func readAggregateConceptFixture(t *testing.T, filename string) ontology.CanonicalConcept {
 	t.Helper()
 
 	f, err := os.Open(filename)
@@ -136,7 +137,7 @@ func readAggregateConceptFixture(t *testing.T, filename string) ontology.NewAggr
 	}
 	defer f.Close()
 
-	var result ontology.NewAggregatedConcept
+	var result ontology.CanonicalConcept
 	err = json.NewDecoder(f).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -145,13 +146,13 @@ func readAggregateConceptFixture(t *testing.T, filename string) ontology.NewAggr
 }
 
 type s3Mock struct {
-	concepts map[string]ontology.NewConcept
+	concepts map[string]ontology.SourceConcept
 }
 
-func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.NewConcept, string, error) {
+func (s s3Mock) GetConceptAndTransactionID(ctx context.Context, publication string, UUID string) (bool, ontology.SourceConcept, string, error) {
 	concept, ok := s.concepts[UUID]
 	if !ok {
-		return false, ontology.NewConcept{}, "", errors.New("not found")
+		return false, ontology.SourceConcept{}, "", errors.New("not found")
 	}
 	return true, concept, "tid_test", nil
 }
