@@ -253,7 +253,7 @@ func main() {
 
 			eventsSNS, err = sns.NewClient(*conceptUpdatesSNSTopicArn)
 			if err != nil {
-				logger.WithError(err).Fatal("Error creating concept events SQS client")
+				logger.WithError(err).Fatal("Error creating concept events SNS client")
 			}
 
 			kinesisClient, err = kinesis.NewClient(*kinesisStreamName, *kinesisRegion, *crossAccountRoleARN)
