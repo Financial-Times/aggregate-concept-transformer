@@ -3,7 +3,7 @@ module github.com/Financial-Times/aggregate-concept-transformer
 go 1.21
 
 require (
-	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.4
+	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.5
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
 	github.com/Financial-Times/go-logger v0.0.0-20180323124113-febee6537e90
 	github.com/Financial-Times/http-handlers-go v0.0.0-20180517120644-2c20324ab887
@@ -22,16 +22,17 @@ require (
 require (
 	github.com/Financial-Times/transactionid-utils-go v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/santhosh-tekuri/jsonschema/v5 v5.3.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
