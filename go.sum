@@ -1,5 +1,9 @@
 github.com/Financial-Times/cm-graph-ontology/v2 v2.0.8 h1:fxHkNLbN+OOahOKSr/6iczbGwBh+Q4AuLZRv1w7O5gU=
 github.com/Financial-Times/cm-graph-ontology/v2 v2.0.8/go.mod h1:HNytPLbek0HwF5KX8m5cGNZ/HTdtXwTisR3HmCk7O/o=
+github.com/Financial-Times/cm-graph-ontology/v2 v2.0.9-0.20240531061708-ea53cccb7f5d h1:I/gTyeWMdjeH1SQPCJWgvxUErngI7OM6B0mB9RXdtJc=
+github.com/Financial-Times/cm-graph-ontology/v2 v2.0.9-0.20240531061708-ea53cccb7f5d/go.mod h1:HNytPLbek0HwF5KX8m5cGNZ/HTdtXwTisR3HmCk7O/o=
+github.com/Financial-Times/cm-graph-ontology/v2 v2.0.10-0.20240603055231-91963423df93 h1:r91mHyfztQF7rDp4qOlSYhah3g4CKSTTT7/s6PwiGX8=
+github.com/Financial-Times/cm-graph-ontology/v2 v2.0.10-0.20240603055231-91963423df93/go.mod h1:HNytPLbek0HwF5KX8m5cGNZ/HTdtXwTisR3HmCk7O/o=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f h1:QzpUQuWLBJI4Gc8ZsJMlbm1kOvSqzvCRgDeKtTrk2+s=
 github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f/go.mod h1:gpAzq6W5rCheYlY32JOIxS/VjVcYHbC2PkMzQngHT9c=
 github.com/Financial-Times/go-logger v0.0.0-20180323124113-febee6537e90 h1:U7wPaeMESlG0WVwOobaw4qv6I6s9F8b0SdmJKH3Vh6A=
