@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.2
 
 require (
-	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.12
+	github.com/Financial-Times/cm-graph-ontology/v2 v2.0.13-0.20240704062401-987a8077d47b
 	github.com/Financial-Times/go-fthealth v0.0.0-20181009114238-ca83ad65381f
 	github.com/Financial-Times/go-logger v0.0.0-20180323124113-febee6537e90
 	github.com/Financial-Times/http-handlers-go v0.0.0-20180517120644-2c20324ab887
