@@ -46,7 +46,7 @@ func (h *AggregateConceptHandler) GetHandler(w http.ResponseWriter, r *http.Requ
 	ctx, cancel := context.WithTimeout(r.Context(), h.requestTimeout)
 	defer cancel()
 	if publication != "" {
-		UUID = strings.Join([]string{publication, UUID}, "-")
+		UUID = strings.Join([]string{publication, UUID}, "/")
 	}
 
 	concept, transactionID, err := h.getConcordedConcept(ctx, UUID)
