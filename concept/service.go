@@ -491,6 +491,11 @@ func extractIdentifiersFromKey(uuid string) (string, string, error) {
 		return matches[1], matches[0], nil
 	}
 
+	parts := strings.Split(uuid, "/")
+	if len(parts) > 1 {
+		return matches[0], parts[0], nil
+	}
+
 	return matches[0], "", nil
 }
 
