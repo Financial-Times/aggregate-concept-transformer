@@ -136,4 +136,37 @@ See [swagger.yml](api/swagger.yml).
 
 ## Documentation
 
+### API Specification
+
+#### 1. Get Aggregate Concept
+
+**Endpoint:** `/concept/{uuid}`
+
+**Method:** `GET`
+
+**Description:** Retrieve concorded JSON model for a given UUID.
+
+**Parameters:**
+
+1. `uuid` (path parameter, required): The UUID of the concept to be retrieved from S3.
+
+2. `publication` (query parameter, optional): The identificator of the publication of the concept when applicable.
+
+* Note that the publication identificator can be any string, for example most of our external publications are in the UUID format, however we have an exception for the `Generic` authority, concepts with this authority are requested like so:
+
+```bash
+https://{{delivery_host}}/__aggregate-concept-transformer/concept/176a59ae-e93b-4f6f-84f2-d6e8461015a1?publication=Generic
+```
+
+#### 2. Get Aggregate Concept and Send to Neo4j and Elasticsearch
+
+**Endpoint:** `/concept/{uuid}/send`
+
+**Method:** `POST`
+
+**Description:** Retrieve concorded JSON model for a given UUID and send it to Neo4j and Elasticsearch.
+
+**Parameters:**
+1.`uuid` (path parameter, required): The UUID of the concept to be retrieved from S3.
+
 * Runbook: [Runbook](https://runbooks.in.ft.com/aggregate-concept-transformer)
